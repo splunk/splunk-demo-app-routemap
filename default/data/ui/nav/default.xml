@@ -1,0 +1,4 @@
+<nav>
+    <view name="default" default="true"/>
+    <a href="/dj/redirector/routemap/home">Home</a>
+</nav>
