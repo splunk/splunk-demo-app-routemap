@@ -22,8 +22,11 @@
 
     <div>
         <div class="main-area">
-            <p>Template message: {{message}}</p>
-            <p class="muted">You should also look in the JavaScript console...</p>
+            <form class="form-search" id="searchForm">
+              <input type="text" class="input-medium search-query" value="source=firebase | stats values(lat), values(lon) by routeTag, id"> 
+              <button type="submit" class="btn">Search</button>
+            </form>
+
         </div>
     </div>
 
@@ -31,6 +34,30 @@
 
 {% block js %}    
     <script>
-        console.log("Custom JavaScript Goes Here (look in your template)!");
+        require(["splunkjs/ready!", "splunkjs/mvc/searchmanager", "underscore"], function(mvc) {
+            var _ = require('underscore');
+            var SearchManager = require("splunkjs/mvc/searchmanager");
+            
+            $('#searchForm').submit(function() {
+                var search = new SearchManager({
+                    app: 'routemap',
+                    search: $(this).find('input[type=text]').get(0).value
+                });
+                
+                var result = search.data("results", {count: 0, output_mode: "json"});
+                result.on("data", function() {
+                    if (!result.hasData()) {
+                        return;
+                    }
+                    
+                    var results = result.data().results;
+                    _.each(results, function(result) {
+                        console.log(JSON.stringify(result));
+                    });
+                });
+
+                return false;
+            });
+        });
     </script>
 {% endblock js %}

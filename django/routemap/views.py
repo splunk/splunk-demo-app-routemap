@@ -5,6 +5,5 @@ from splunkdj.decorators.render import render_to
 @login_required
 def home(request):
     return {
-        "message": "Hello World from routemap!",
         "app_name": "routemap"
     }
