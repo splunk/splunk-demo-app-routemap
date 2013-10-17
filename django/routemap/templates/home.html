@@ -21,12 +21,7 @@
 {% block content %}
 
     <div>
-        <div class="main-area">
-            <form class="form-search" id="searchForm">
-              <input type="text" class="input-medium search-query" value="source=firebase | stats values(lat), values(lon) by routeTag, id"> 
-              <button type="submit" class="btn">Search</button>
-            </form>
-
+        <div id="searchPanel">
         </div>
     </div>
 
@@ -34,29 +29,65 @@
 
 {% block js %}    
     <script>
-        require(["splunkjs/ready!", "splunkjs/mvc/searchmanager", "underscore"], function(mvc) {
+        var deps = [
+            'splunkjs/ready!',
+            'splunkjs/mvc/searchbarview',
+            'splunkjs/mvc/searchcontrolsview',
+            'splunkjs/mvc/tableview',
+            'splunkjs/mvc/searchmanager',
+            'underscore'
+        ];
+        require(deps, function(mvc) {
+            var SearchbarView = require('splunkjs/mvc/searchbarview');
+            var SearchControlsView = require('splunkjs/mvc/searchcontrolsview');
+            var TableView = require('splunkjs/mvc/tableview');
+            var SearchManager = require('splunkjs/mvc/searchmanager');
             var _ = require('underscore');
-            var SearchManager = require("splunkjs/mvc/searchmanager");
-            
-            $('#searchForm').submit(function() {
-                var search = new SearchManager({
-                    app: 'routemap',
-                    search: $(this).find('input[type=text]').get(0).value
-                });
-                
-                var result = search.data("results", {count: 0, output_mode: "json"});
-                result.on("data", function() {
-                    if (!result.hasData()) {
-                        return;
-                    }
-                    
-                    var results = result.data().results;
-                    _.each(results, function(result) {
-                        console.log(JSON.stringify(result));
-                    });
-                });
 
-                return false;
+            // Initialize new search manager
+
+            var searchManager = new SearchManager({
+                id: 'appSearchManager',
+                app: 'routemap',
+                preview: true,
+                required_field_list: '*',
+                status_buckets: 300,
+                search: 'source=firebase | stats values(lat), values(lon) by routeTag, id'
+            });
+
+            var searchPanel = $('#searchPanel');
+
+            // Instantiate the views and search manager
+            var searchbarView = new SearchbarView({
+                managerid: searchManager.id,
+                el: searchPanel.append('div')
+            }).render();
+
+            // Update the search manager when the query in the searchbar changes
+            searchbarView.on('change', function() {
+                searchManager.set('search', searchbarView.val());
+            });
+
+            // Update the search manager when the timerange in the searchbar changes
+            searchbarView.timerange.on('change', function() {
+                searchManager.search.set(searchbarView.timerange.val());
+            });
+
+            new SearchControlsView({
+                managerid: searchManager.id,
+                el: searchPanel.append('div')
+            }).render();
+
+            var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
+            routesData.on('data', function() {
+                if (!routesData.hasData()) {
+                    return;
+                }
+                
+                var results = routesData.data().results;
+                _.each(results, function(result) {
+                    console.log(JSON.stringify(result));
+                });
             });
         });
     </script>
