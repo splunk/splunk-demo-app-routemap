@@ -46,7 +46,7 @@
                 preview: true,
                 required_field_list: '*',
                 status_buckets: 300,
-                search: 'source=firebase | stats values(lat), values(lon) by routeTag, id'
+                search: 'source=firebase routeTag=2 id=8001 | stats list(lat) as latArray, list(lon) as lonArray by routeTag, id'
             });
 
             var searchPanel = $('#searchPanel');
@@ -72,7 +72,6 @@
                 el: searchPanel.append('div')
             }).render();
 
-            // Initialize Google Maps
             var map = new GMaps({
                       div: '#map',
                       lat: 0,
@@ -86,11 +85,39 @@
                 if (!routesData.hasData()) {
                     return;
                 }
+
+                var bounds = new google.maps.LatLngBounds();
+                map.removePolylines();
                 
                 var results = routesData.data().results;
-                _.each(results, function(result) {
+                for (var rIndex = 0; rIndex < Math.min(100, results.length); rIndex++) {
+                    var result = results[rIndex];
+
+                    var latValues = result['latArray'];
+                    var lonValues = result['lonArray'];
+                    
+                    var path = [];
+
+                    for (var i = 0; i < Math.min(latValues.length, lonValues.length); i++) {
+                        if (latValues[i] && lonValues[i]) {
+                            path.push([latValues[i], lonValues[i]]);
+                            bounds.extend(new google.maps.LatLng(latValues[i], lonValues[i]));
+                        }
+                    }
+
+                    map.drawPolyline({
+                      path: path,
+                      strokeColor: '#131540',
+                      strokeOpacity: 0.6,
+                      strokeWeight: 6
+                    });
+
+
                     console.log(JSON.stringify(result));
-                });
+                }
+
+                map.fitBounds(bounds);
+                
             });
         });
     </script>
