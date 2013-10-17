@@ -1,3 +1,11 @@
-.main-area {
-    border: 1px solid black;
+#map-wrapper {
+    background: white;
+    height: 500px;
+    width: 90%;
+    margin: 20px auto;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
 }

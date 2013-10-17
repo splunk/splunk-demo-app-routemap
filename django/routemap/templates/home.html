@@ -6,28 +6,22 @@
 
 {% block css %}
     <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}{{app_name}}/custom.css" />
-
-    <style>        
-        .main-area {
-            margin: 0px auto;
-            margin-top: 30px;
-            margin-bottom: 30px;
-            padding: 10px;
-            width: 300px;
-        }    
-    </style>
 {% endblock css %}
 
 {% block content %}
-
     <div>
         <div id="searchPanel">
         </div>
+        <div id="map-wrapper">
+            <div id="map">
+            </div>
+        </div>
     </div>
-
 {% endblock content%}
 
-{% block js %}    
+{% block js %}
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/gmaps.js"></script>
     <script>
         var deps = [
             'splunkjs/ready!',
@@ -78,6 +72,15 @@
                 el: searchPanel.append('div')
             }).render();
 
+            // Initialize Google Maps
+            var map = new GMaps({
+                      div: '#map',
+                      lat: 0,
+                      lng: 0,
+                      zoom: 2
+                    });
+
+            // Connect to search
             var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
             routesData.on('data', function() {
                 if (!routesData.hasData()) {
