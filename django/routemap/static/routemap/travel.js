@@ -1,11 +1,16 @@
 define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
-  function TravelSystem(map, progressSelector, timeReportSelector) {
+  function TravelSystem(map, progressSelector, timeReportSelector, toolbarSelector) {
     this.objects = [];
     this.map = map;
     this.interval = null;
     this.progress = $(progressSelector).get(0);
     this.spanTimeReport = $(timeReportSelector);
+
+    var toolbar = $(toolbarSelector);
+    if (toolbarSelector) {
+
+    }
   }
 
   TravelSystem.prototype.addObject = function(title) {
@@ -61,12 +66,13 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
     if (currentTime && endTime && currentTime < endTime) {
       this.interval = setInterval(function() {
-        currentTime += speed;
+        var step = speed / 5;
+        currentTime += step;
         if (currentTime > endTime) {
           this.stop();
         } else {
           if (this.progress) {
-            this.progress.value += speed;
+            this.progress.value += step;
           }
           reportTime();
 
@@ -74,7 +80,7 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
             obj.move(currentTime);
           }.bind(this));
         }
-      }.bind(this), 1000);
+      }.bind(this), 50);
     }
 
     
@@ -139,15 +145,20 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
           }
         } 
         else {
-          // Move object closer to next position
+          var currentPoint = this.points[this.currentIndex];
+          var nextPoint = this.points[this.currentIndex + 1];
+          var p = (currentTime - currentPoint)/(nextPoint - currentPoint);
+          var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
+          var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
+          this.marker.setPosition( new google.maps.LatLng(this.points[this.currentIndex].lat, this.points[this.currentIndex].lon) );
         }
       }
     }
     
   };
 
-  return exports.create = function(map, progressSelector, timeReportSelector) {
-    return new TravelSystem(map, progressSelector, timeReportSelector);
+  return exports.create = function(map, progressSelector, timeReportSelector, toolbarSelector) {
+    return new TravelSystem(map, progressSelector, timeReportSelector, toolbarSelector);
   };
 });
 
