@@ -22,6 +22,7 @@
 {% block js %}
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
     <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/gmaps.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/travel.js"></script>
     <script>
         var deps = [
             'splunkjs/ready!',
@@ -29,7 +30,8 @@
             'splunkjs/mvc/searchcontrolsview',
             'splunkjs/mvc/tableview',
             'splunkjs/mvc/searchmanager',
-            'underscore'
+            'underscore',
+            'travelSystem'
         ];
         require(deps, function(mvc) {
             var SearchbarView = require('splunkjs/mvc/searchbarview');
@@ -37,6 +39,7 @@
             var TableView = require('splunkjs/mvc/tableview');
             var SearchManager = require('splunkjs/mvc/searchmanager');
             var _ = require('underscore');
+            var travelSystemModule = require('travelSystem');
 
             // Initialize new search manager
 
@@ -46,7 +49,7 @@
                 preview: true,
                 required_field_list: '*',
                 status_buckets: 300,
-                search: 'source=firebase routeTag=2 id=8001 | stats list(lat) as latArray, list(lon) as lonArray by routeTag, id'
+                search: 'source=firebase | stats list(ts) as tsArray, list(lat) as latArray, list(lon) as lonArray by routeTag, id'
             });
 
             var searchPanel = $('#searchPanel');
@@ -79,12 +82,20 @@
                       zoom: 2
                     });
 
+            var travelSystem = null;
+
             // Connect to search
             var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
             routesData.on('data', function() {
                 if (!routesData.hasData()) {
                     return;
                 }
+
+                if (travelSystem) {
+                    travelSystem.stop();
+                } 
+
+                travelSystem = travelSystemModule(map);
 
                 var bounds = new google.maps.LatLngBounds();
                 map.removePolylines();
@@ -93,31 +104,24 @@
                 for (var rIndex = 0; rIndex < Math.min(100, results.length); rIndex++) {
                     var result = results[rIndex];
 
+                    var travelObject = travelSystem.addObject();
+
                     var latValues = result['latArray'];
                     var lonValues = result['lonArray'];
-                    
-                    var path = [];
+                    var tsValues = result['tsArray'];
 
-                    for (var i = 0; i < Math.min(latValues.length, lonValues.length); i++) {
-                        if (latValues[i] && lonValues[i]) {
-                            path.push([latValues[i], lonValues[i]]);
+                    for (var i = 0; i < Math.min(tsValues.length, Math.min(latValues.length, lonValues.length)); i++) {
+                        if (latValues[i] && lonValues[i] && tsValues[i]) {
+                            //path.push([latValues[i], lonValues[i]]);
                             bounds.extend(new google.maps.LatLng(latValues[i], lonValues[i]));
+                            travelObject.addPoint(tsValues[i], latValues[i], lonValues[i]);
                         }
                     }
-
-                    map.drawPolyline({
-                      path: path,
-                      strokeColor: '#131540',
-                      strokeOpacity: 0.6,
-                      strokeWeight: 6
-                    });
-
-
-                    console.log(JSON.stringify(result));
                 }
 
                 map.fitBounds(bounds);
                 
+                travelSystem.start();
             });
         });
     </script>
