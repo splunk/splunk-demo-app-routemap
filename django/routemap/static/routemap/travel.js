@@ -23,6 +23,12 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
     // Private members
     var interval = null;
+    var graduality = 50;
+    var speed = 100;
+
+    var currentTime = null;
+    var beginTime = null;
+    var endTime = null;
 
     // Public function
 
@@ -34,6 +40,22 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     this.addObject = function(title, points) {
       var travelObject = new TravelObject(this.map, title, points);
       this.objects.push(travelObject);
+
+      if (travelObject.points.length > 0){
+        var oStartTime = _.first(travelObject.points).ts, 
+            oEndTime = _.last(travelObject.points).ts;
+
+        if (oStartTime) {
+          beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
+          this.progress.prop('min', beginTime);
+        }
+
+        if (oEndTime) {
+          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
+          this.progress.prop('max', endTime);
+        }
+      }
+
       return travelObject;
     }.bind(this);
 
@@ -44,38 +66,22 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
       this.pause();
       _.each(this.objects, function(obj) { obj.removeMarker(); })
       this.objects = [];
+      this.currentTime = this.beginTime = this.endTime = null;
+      this.progress.val(undefined);
     }.bind(this)
 
     /*
     * Start travel system
-    * @param speed - speed of the system (default is 1).
     */
-    this.start = start = function(speed) {
-      if (!speed) {
-        speed = 1;
+    this.play = function() {
+      if (!beginTime || !endTime) {
+        // No objects
+        return;
       }
 
-      var currentTime = null,
-          endTime = null;
-
-      _.each(this.objects, function(obj) {
-        if (obj.points.length > 0){
-          var oStartTime = _.first(obj.points).ts, 
-              oEndTime = _.last(obj.points).ts;
-
-          if (oStartTime) {
-            currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
-          }
-
-          if (oEndTime) {
-            endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
-          }
-        }
-      });
+      if (!currentTime) { currentTime = beginTime;}
 
       if (this.progress) {
-        this.progress.prop('min', currentTime);
-        this.progress.prop('max', endTime);
         this.progress.val(currentTime);
       }
 
@@ -92,12 +98,9 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
       reportTime();
 
-      var graduality = 50;
-
       if (currentTime && endTime && currentTime < endTime) {
         interval = setInterval(function() {
-          var step = speed / (1000 / graduality);
-          currentTime += step;
+          currentTime += (speed / (1000 / graduality));
 
           _.each(this.objects, function(obj) {
             obj.move(currentTime);
