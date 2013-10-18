@@ -13,12 +13,6 @@
         <div id="searchPanel">
         </div>
         <div id="customToolbar">
-            <div>
-                <meter id="travelSystemProgress" />
-            </div>
-            <div>
-                <span id="timeReport"></span>
-            </div>
         </div>
         <div id="map-wrapper">
             <div id="map">
@@ -103,7 +97,7 @@
                     travelSystem.stop();
                 } 
 
-                travelSystem = travelSystemModule(map, '#travelSystemProgress', '#timeReport');
+                travelSystem = travelSystemModule(map, '#customToolbar');
 
                 var bounds = new google.maps.LatLngBounds();
                 map.removePolylines();

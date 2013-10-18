@@ -1,15 +1,23 @@
 define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
-  function TravelSystem(map, progressSelector, timeReportSelector, toolbarSelector) {
+  function TravelSystem(map, toolbarSelector) {
     this.objects = [];
     this.map = map;
     this.interval = null;
-    this.progress = $(progressSelector).get(0);
-    this.spanTimeReport = $(timeReportSelector);
+
+    // UI Controls
+    this.progress = null;
+    this.spanTimeReport = null;
+    this.spanTimeBegin = null;
+    this.spanTimeEnd = null;
 
     var toolbar = $(toolbarSelector);
-    if (toolbarSelector) {
-
+    if (toolbar) {
+      this.progress = $('meter', toolbar.append('<div><meter /></div>')).get(0);
+      var timeBar = toolbar.append('<div class="row-fluid"><div class="span2 text-left"/><div class="span8 text-center" /><div class="span2 text-right"/></div>');
+      this.spanTimeReport = $('div > div:nth-child(2)', timeBar);
+      this.spanTimeBegin = $('div > div:first-child', timeBar);
+      this.spanTimeEnd = $('div > div:last-child', timeBar);
     }
   }
 
@@ -25,7 +33,6 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     }
 
     var currentTime = null,
-        beginTime = null,
         endTime = null;
 
     _.each(this.objects, function(obj) {
@@ -33,7 +40,7 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
       var oStartTime = obj.getStartTime(), oEndTime = obj.getEndTime();
 
       if (oStartTime) {
-        beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
+        currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
       }
 
       if (oEndTime) {
@@ -43,23 +50,15 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
     if (this.progress) {
       this.progress.min = 0;
-      this.progress.max = (endTime - beginTime);
+      this.progress.max = (endTime - currentTime);
       this.progress.value = 0;
     }
 
-    currentTime = beginTime;
+    if (this.spanTimeBegin) { this.spanTimeBegin.text((new Date(currentTime * 1000)).toLocaleString()); }
+    if (this.spanTimeEnd) { this.spanTimeEnd.text((new Date(endTime * 1000)).toLocaleString()); }
 
     var reportTime = function() {
-      if (this.spanTimeReport) {
-        this.spanTimeReport.text(
-          (new Date(currentTime * 1000)).toLocaleString() 
-          + ' (begin: ' 
-          + (new Date(beginTime * 1000)).toLocaleString() 
-          + ', end: ' 
-          + (new Date(endTime * 1000)).toLocaleString()
-          + ')'
-        );
-      }
+      if (this.spanTimeReport) { this.spanTimeReport.text((new Date(currentTime * 1000)).toLocaleString()); }
     }.bind(this);
 
     reportTime();
@@ -157,8 +156,8 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     
   };
 
-  return exports.create = function(map, progressSelector, timeReportSelector, toolbarSelector) {
-    return new TravelSystem(map, progressSelector, timeReportSelector, toolbarSelector);
+  return exports.create = function(map, toolbarSelector) {
+    return new TravelSystem(map, toolbarSelector);
   };
 });
 
