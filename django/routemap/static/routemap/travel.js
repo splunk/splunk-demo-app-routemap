@@ -165,25 +165,27 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     */
     calculatePos: function(currentTime) {
       // Trying to find point 
+      var points = this.get('points');
+
       var nextPointIndex = -1;
-      while ((++nextPointIndex) < this.get('points').length) {
-        if (this.get('points')[nextPointIndex].ts > currentTime) {
+      while ((++nextPointIndex) < points.length) {
+        if (points[nextPointIndex].ts > currentTime) {
           break;
         }
       }
 
-      if (nextPointIndex == 0 || nextPointIndex >= this.get('points').length) {
+      if (nextPointIndex == 0 || nextPointIndex >= points.length) {
         // Current object does not have points in this time
         this.clearPos();
       } else {
         // Let's find position of current object and place it on map
-        var currentPoint = this.get('points')[nextPointIndex - 1];
-        var nextPoint = this.get('points')[nextPointIndex];
+        var currentPoint = points[nextPointIndex - 1];
+        var nextPoint = points[nextPointIndex];
         var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
         var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
         var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
 
-        this.set('pos', { lat: lat, lon: lon });
+        this.set({pos: { lat: lat, lon: lon }});
       }
     },
 
@@ -191,7 +193,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     * Remove marker from map.
     */
     clearPos: function() {
-      this.unset('pos');
+      this.unset({pos: null});
     }
   });
 
