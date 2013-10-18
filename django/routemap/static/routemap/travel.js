@@ -24,7 +24,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     // Private members
     var interval = null;
     var graduality = 50;
-    var speed = 200;
+    var speed = 300;
 
     var currentTime = null;
     var beginTime = null;
@@ -62,6 +62,27 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
         }
       }
 
+      var marker = null;
+      travelObject.on('change:pos', function(model, pos) {
+        if (pos) {
+          if (marker) {
+            marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
+          } else {
+            marker = this.map.addMarker({
+                lat: pos.lat,
+                lng: pos.lon,
+                title: model.get('title'),
+                zIndex: 1
+            });
+          }
+        } else {
+          if (marker) {
+            marker.setMap(null);
+            marker = null;
+          }
+        }
+      }.bind(this)); 
+
       return travelObject;
     }.bind(this);
 
@@ -70,7 +91,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     */ 
     this.removeAllObjects = function() {
       this.pause();
-      _.each(this.objects, function(obj) { obj.removeMarker(); })
+      _.each(this.objects, function(obj) { obj.clearPos(); })
       this.objects = [];
       this.currentTime = this.beginTime = this.endTime = null;
       this.progress.val(undefined);
@@ -109,7 +130,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
           currentTime += (speed / (1000 / graduality));
 
           _.each(this.objects, function(obj) {
-            obj.move(currentTime);
+            obj.calculatePos(currentTime);
           }.bind(this));
 
           if (currentTime > endTime) {
@@ -142,7 +163,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     /*
     * Place object on map in current time.
     */
-    move: function(currentTime) {
+    calculatePos: function(currentTime) {
       // Trying to find point 
       var nextPointIndex = -1;
       while ((++nextPointIndex) < this.get('points').length) {
@@ -153,7 +174,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
 
       if (nextPointIndex == 0 || nextPointIndex >= this.get('points').length) {
         // Current object does not have points in this time
-        this.removeMarker();
+        this.clearPos();
       } else {
         // Let's find position of current object and place it on map
         var currentPoint = this.get('points')[nextPointIndex - 1];
@@ -162,27 +183,15 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
         var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
         var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
 
-        if (this.get('marker')) {
-          this.get('marker').setPosition(new google.maps.LatLng(lat, lon));
-        } else {
-          this.set('marker', this.get('map').addMarker({
-              lat: lat,
-              lng: lon,
-              title: this.get('title'),
-              zIndex: 1
-          }));
-        }
+        this.set('pos', { lat: lat, lon: lon });
       }
     },
 
     /*
     * Remove marker from map.
     */
-    removeMarker: function() {
-      if (this.get('marker')) {
-        this.get('marker').setMap(null);
-        this.set('marker', null);
-      }
+    clearPos: function() {
+      this.unset('pos');
     }
   });
 
