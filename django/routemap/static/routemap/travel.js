@@ -39,13 +39,13 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     */
     this.addObject = function(title, points) {
       points = _.sortBy(points || [], function(o) { return o.ts; });
-      var travelObject = new TravelObject({
+      var travelModel = new TravelModel({
                                 map: this.map, 
                                 title: title, 
                                 points: points
                               });
 
-      this.objects.push(travelObject);
+      this.objects.push(travelModel);
 
       if (points.length > 0){
         var oStartTime = _.first(points).ts, 
@@ -63,7 +63,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       }
 
       var marker = null;
-      travelObject.on('change:pos', function(model, pos) {
+      travelModel.on('change:pos', function(model, pos) {
         if (pos) {
           if (marker) {
             marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
@@ -83,7 +83,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
         }
       }.bind(this)); 
 
-      return travelObject;
+      return travelModel;
     }.bind(this);
 
     /*
@@ -159,7 +159,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
   /*
   * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
   */
-  var TravelObject = Backbone.Model.extend({
+  var TravelModel = Backbone.Model.extend({
     /*
     * Place object on map in current time.
     */
