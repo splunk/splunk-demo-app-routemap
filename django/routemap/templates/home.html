@@ -106,18 +106,22 @@
                 for (var rIndex = 0; rIndex < Math.min(100, results.length); rIndex++) {
                     var result = results[rIndex];
 
-                    var travelObject = travelSystem.addObject('Route: ' + result.routeTag + ', bus: ' + result.id);
-
+                    var points = [];
                     var latValues = result['latArray'];
                     var lonValues = result['lonArray'];
                     var tsValues = result['tsArray'];
 
                     for (var i = 0; i < Math.min(tsValues.length, Math.min(latValues.length, lonValues.length)); i++) {
                         if (latValues[i] && lonValues[i] && tsValues[i]) {
-                            bounds.extend(new google.maps.LatLng(latValues[i], lonValues[i]));
-                            travelObject.addPoint(tsValues[i], latValues[i], lonValues[i]);
+                            var ts = parseFloat(tsValues[i]),
+                                lat = parseFloat(latValues[i]),
+                                lon = parseFloat(lonValues[i]);
+                            points.push({ ts: ts, lat: lat, lon: lon });
+                            bounds.extend(new google.maps.LatLng(lat, lon));
                         }
                     }
+
+                    travelSystem.addObject('Route: ' + result.routeTag + ', bus: ' + result.id, points);
                 }
 
                 map.fitBounds(bounds);

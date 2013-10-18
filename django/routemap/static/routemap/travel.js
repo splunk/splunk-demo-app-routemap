@@ -23,8 +23,8 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     }
   }
 
-  TravelSystem.prototype.addObject = function(title) {
-    var travelObject = new TravelObject(this.map, title);
+  TravelSystem.prototype.addObject = function(title, points) {
+    var travelObject = new TravelObject(this.map, title, points);
     this.objects.push(travelObject);
     return travelObject;
   };
@@ -38,15 +38,17 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
         endTime = null;
 
     _.each(this.objects, function(obj) {
-      obj.start();
-      var oStartTime = obj.getStartTime(), oEndTime = obj.getEndTime();
+      if (obj.points.length > 0){
+        var oStartTime = _.first(obj.points).ts, 
+            oEndTime = _.last(obj.points).ts;
 
-      if (oStartTime) {
-        currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
-      }
+        if (oStartTime) {
+          currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
+        }
 
-      if (oEndTime) {
-        endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
+        if (oEndTime) {
+          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
+        }
       }
     });
 
@@ -99,21 +101,21 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     }
   }
 
-  function TravelObject(map, title) {
-    this.points = [];
-    this.map = map;
-    this.marker = null;
+  /*
+  * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
+  */
+  function TravelObject(map, title, points) {
+    this.points = _.sortBy(points || [], function(o) { return o.ts; });
     this.title = title;
 
-    // Private functions
-    var removeMarker = function() {
-      if (this.marker) {
-        this.marker.setMap(null);
-        this.marker = null;
-      }
-    }.bind(this);
+    // Private members
+    var marker = null; // Google map marker
 
     // Public functions
+
+    /*
+    * Place object on map in current time.
+    */
     this.move = function(currentTime) {
       // Trying to find point 
       var nextPointIndex = -1;
@@ -125,46 +127,29 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
       if (nextPointIndex == 0 || nextPointIndex >= this.points.length) {
         // Current object does not have points in this time
-        removeMarker();
-        return;
-      }
-
-      var currentPoint = this.points[nextPointIndex - 1];
-      var nextPoint = this.points[nextPointIndex];
-      var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
-      var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
-      var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
-
-      if (this.marker) {
-        this.marker.setPosition(new google.maps.LatLng(lat, lon));
+        if (marker) {
+          marker.setMap(null);
+          marker = null;
+        }
       } else {
-        this.marker = this.map.addMarker({
-            lat: lat,
-            lng: lon,
-            title: this.title,
-            zIndex: 1
-        });
+        // Let's find position of current object and place it on map
+        var currentPoint = this.points[nextPointIndex - 1];
+        var nextPoint = this.points[nextPointIndex];
+        var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
+        var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
+        var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
+
+        if (marker) {
+          marker.setPosition(new google.maps.LatLng(lat, lon));
+        } else {
+          marker = map.addMarker({
+              lat: lat,
+              lng: lon,
+              title: this.title,
+              zIndex: 1
+          });
+        }
       }
-    }.bind(this);
-
-    this.addPoint = function(ts, lat, lon) {
-      if (typeof lat !== 'number') { lat = parseFloat(lat); }
-      if (typeof lon !== 'number') { lon = parseFloat(lon); }
-      if (typeof ts !== 'number') { ts = parseFloat(ts); }
-      this.points.push({ ts: ts, lat: lat, lon: lon });
-    }.bind(this);
-
-    this.start = function() {
-      // Prepare to travel - sort array
-      this.points = _.sortBy(this.points, function(o) { return o.ts; });
-    }.bind(this);
-
-    this.getStartTime = function() {
-      return (this.points.length === 0) ? null : this.points[0].ts;
-    }.bind(this);
-
-    this.getEndTime = function() {
-      return (this.points.length === 0) ? null : this.points[this.points.length - 1].ts;
     }.bind(this);
   }
 
