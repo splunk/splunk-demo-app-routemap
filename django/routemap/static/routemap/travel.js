@@ -3,7 +3,6 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
   function TravelSystem(map, toolbarSelector) {
     this.objects = [];
     this.map = map;
-    this.interval = null;
 
     // UI Controls
     this.progress = null;
@@ -21,84 +20,110 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
       this.spanTimeEnd = $('div > div:last-child', timeBar);
       var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
     }
-  }
 
-  TravelSystem.prototype.addObject = function(title, points) {
-    var travelObject = new TravelObject(this.map, title, points);
-    this.objects.push(travelObject);
-    return travelObject;
-  };
+    // Private members
+    var interval = null;
 
-  TravelSystem.prototype.start = function(speed) {
-    if (!speed) {
-      speed = 1;
-    }
+    // Public function
 
-    var currentTime = null,
-        endTime = null;
-
-    _.each(this.objects, function(obj) {
-      if (obj.points.length > 0){
-        var oStartTime = _.first(obj.points).ts, 
-            oEndTime = _.last(obj.points).ts;
-
-        if (oStartTime) {
-          currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
-        }
-
-        if (oEndTime) {
-          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
-        }
-      }
-    });
-
-    if (this.progress) {
-      this.progress.prop('min', currentTime);
-      this.progress.prop('max', endTime);
-      this.progress.val(currentTime);
-    }
-
-    if (this.spanTimeBegin) { this.spanTimeBegin.text((new Date(currentTime * 1000)).toLocaleString()); }
-    if (this.spanTimeEnd) { this.spanTimeEnd.text((new Date(endTime * 1000)).toLocaleString()); }
-
-    if (this.sliderSpeedControl) {
-      this.sliderSpeedControl.val(speed);
-    }
-
-    var reportTime = function() {
-      if (this.spanTimeReport) { this.spanTimeReport.text((new Date(currentTime * 1000)).toLocaleString()); }
+    /*
+    * Add object on the map. 
+    * @param title - will be used as a tooltip for marker.
+    * @param points - array of points where each point is { ts: [float], lat: [float], lon: [float]}
+    */
+    this.addObject = function(title, points) {
+      var travelObject = new TravelObject(this.map, title, points);
+      this.objects.push(travelObject);
+      return travelObject;
     }.bind(this);
 
-    reportTime();
+    /*
+    * Remove all tracking objects.
+    */ 
+    this.removeAllObjects = function() {
+      this.pause();
+      _.each(this.objects, function(obj) { obj.removeMarker(); })
+      this.objects = [];
+    }.bind(this)
 
-    var graduality = 50;
+    /*
+    * Start travel system
+    * @param speed - speed of the system (default is 1).
+    */
+    this.start = start = function(speed) {
+      if (!speed) {
+        speed = 1;
+      }
 
-    if (currentTime && endTime && currentTime < endTime) {
-      this.interval = setInterval(function() {
-        var step = speed / (1000 / graduality);
-        currentTime += step;
+      var currentTime = null,
+          endTime = null;
 
-        _.each(this.objects, function(obj) {
-          obj.move(currentTime);
-        }.bind(this));
+      _.each(this.objects, function(obj) {
+        if (obj.points.length > 0){
+          var oStartTime = _.first(obj.points).ts, 
+              oEndTime = _.last(obj.points).ts;
 
-        if (currentTime > endTime) {
-          this.stop();
-        } else {
-          if (this.progress) {
-            this.progress.val(currentTime);
+          if (oStartTime) {
+            currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
           }
-          reportTime();
-        }
-      }.bind(this), graduality);
-    }
-  };
 
-  TravelSystem.prototype.stop = function() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
+          if (oEndTime) {
+            endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
+          }
+        }
+      });
+
+      if (this.progress) {
+        this.progress.prop('min', currentTime);
+        this.progress.prop('max', endTime);
+        this.progress.val(currentTime);
+      }
+
+      if (this.spanTimeBegin) { this.spanTimeBegin.text((new Date(currentTime * 1000)).toLocaleString()); }
+      if (this.spanTimeEnd) { this.spanTimeEnd.text((new Date(endTime * 1000)).toLocaleString()); }
+
+      if (this.sliderSpeedControl) {
+        this.sliderSpeedControl.val(speed);
+      }
+
+      var reportTime = function() {
+        if (this.spanTimeReport) { this.spanTimeReport.text((new Date(currentTime * 1000)).toLocaleString()); }
+      }.bind(this);
+
+      reportTime();
+
+      var graduality = 50;
+
+      if (currentTime && endTime && currentTime < endTime) {
+        interval = setInterval(function() {
+          var step = speed / (1000 / graduality);
+          currentTime += step;
+
+          _.each(this.objects, function(obj) {
+            obj.move(currentTime);
+          }.bind(this));
+
+          if (currentTime > endTime) {
+            this.pause();
+          } else {
+            if (this.progress) {
+              this.progress.val(currentTime);
+            }
+            reportTime();
+          }
+        }.bind(this), graduality);
+      }
+    }.bind(this);
+
+    /*
+    * Pause system.
+    */
+    this.pause = function() {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    }.bind(this);
   }
 
   /*
@@ -127,10 +152,7 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
       if (nextPointIndex == 0 || nextPointIndex >= this.points.length) {
         // Current object does not have points in this time
-        if (marker) {
-          marker.setMap(null);
-          marker = null;
-        }
+        this.removeMarker();
       } else {
         // Let's find position of current object and place it on map
         var currentPoint = this.points[nextPointIndex - 1];
@@ -149,6 +171,16 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
               zIndex: 1
           });
         }
+      }
+    }.bind(this);
+
+    /*
+    * Remove marker from map.
+    */
+    this.removeMarker = function() {
+      if (marker) {
+        marker.setMap(null);
+        marker = null;
       }
     }.bind(this);
   }

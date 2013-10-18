@@ -84,7 +84,7 @@
                       zoom: 2
                     });
 
-            var travelSystem = null;
+            var travelSystem = travelSystemModule(map, '#customToolbar');
 
             // Connect to search
             var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
@@ -94,10 +94,9 @@
                 }
 
                 if (travelSystem) {
-                    travelSystem.stop();
+                    travelSystem.pause();
+                    travelSystem.removeAllObjects();
                 } 
-
-                travelSystem = travelSystemModule(map, '#customToolbar');
 
                 var bounds = new google.maps.LatLngBounds();
                 map.removePolylines();
