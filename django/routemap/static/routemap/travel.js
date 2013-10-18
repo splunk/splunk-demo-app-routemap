@@ -23,42 +23,47 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       this.inputTime = this.$('#input-time');
 
       // Connect view to view-model
-      this.viewModel.on('change:currentTime', function() {
-        this.labelCurrentTime.text(
-          this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
-        this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
-        this.inputTime.val(this.viewModel.get('currentTime'));
-      }.bind(this));
-      this.viewModel.on('change:beginTime', function() {
-        if (this.viewModel.has('beginTime')) {
-          this.inputTime.prop('min', this.viewModel.get('beginTime'));
-          this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
-        } else {
-          this.labelBeginTime.text('');
-        }
-      }.bind(this));
-      this.viewModel.on('change:endTime', function() {
-        if (this.viewModel.has('endTime')) {
-          this.inputTime.prop('max', this.viewModel.get('endTime'));
-          this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
-        } else {
-          this.labelEndTime.text('');
-        }
-      }.bind(this));
-      this.viewModel.on('change:speed', function() {
-        this.labelCurrentTime.text(
-          this.viewModel.has('speed') ? (this.viewModel.get('speed') + 'X') : '');
-        this.inputSpeedValue.prop('disabled', !this.viewModel.has('speed'));
-      }.bind(this));
+      this.viewModel
+        .on('change:currentTime', function() {
+            this.labelCurrentTime.text(
+              this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
+            this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
+            this.inputTime.val(this.viewModel.get('currentTime'));
+          }.bind(this))
+        .on('change:beginTime', function() {
+            if (this.viewModel.has('beginTime')) {
+              this.inputTime.prop('min', this.viewModel.get('beginTime'));
+              this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
+            } else {
+              this.labelBeginTime.text('');
+            }
+          }.bind(this))
+        .on('change:endTime', function() {
+            if (this.viewModel.has('endTime')) {
+              this.inputTime.prop('max', this.viewModel.get('endTime'));
+              this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
+            } else {
+              this.labelEndTime.text('');
+            }
+          }.bind(this))
+        .on('change:speed', function() {
+            this.labelCurrentTime.text(
+              this.viewModel.has('speed') ? (this.viewModel.get('speed') + 'X') : '');
+            this.inputSpeedValue.prop('disabled', !this.viewModel.has('speed'));
+          }.bind(this));
     },
 
     // Event handlers
     userChangeSpeed: function() {
+      this.viewModel.pause();
       this.viewModel.set('speed', this.inputSpeedValue.val());
+      this.viewModel.play();
     },
 
     userChangeTime: function() {
+      this.viewModel.pause();
       this.viewModel.setCurrentTime(parseFloat(this.inputTime.val()));
+      this.viewModel.play();
     },
   });
 
