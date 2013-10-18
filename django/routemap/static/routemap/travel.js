@@ -1,7 +1,7 @@
 define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
 
   function TravelSystem(map, toolbarSelector) {
-    this.objects = [];
+    this.collection = new TravelModelsCollection;
     this.map = map;
 
     // UI Controls
@@ -21,6 +21,8 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
     }
 
+
+
     // Private members
     var interval = null;
     var graduality = 50;
@@ -29,6 +31,51 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     var currentTime = null;
     var beginTime = null;
     var endTime = null;
+
+    // Event handlers
+    this.collection.on('add', function(model) {
+      var points = model.get('points');
+
+      if (points.length > 0){
+        var oStartTime = _.first(points).ts, 
+            oEndTime = _.last(points).ts;
+
+        if (oStartTime) {
+          beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
+          this.progress.prop('min', beginTime);
+        }
+
+        if (oEndTime) {
+          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
+          this.progress.prop('max', endTime);
+        }
+      }
+
+      var marker = null;
+      model.on('change:pos', function(model, pos) {
+        if (pos) {
+          if (marker) {
+            marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
+          } else {
+            marker = this.map.addMarker({
+                lat: pos.lat,
+                lng: pos.lon,
+                title: model.get('title'),
+                zIndex: 1
+            });
+          }
+        } else {
+          if (marker) {
+            marker.setMap(null);
+            marker = null;
+          }
+        }
+      }.bind(this)); 
+    }.bind(this));
+
+    this.collection.on('remove', function(model) {
+      model.clearPos();
+    });
 
     // Public function
 
@@ -39,13 +86,14 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     */
     this.addObject = function(title, points) {
       points = _.sortBy(points || [], function(o) { return o.ts; });
+
       var travelModel = new TravelModel({
                                 map: this.map, 
                                 title: title, 
                                 points: points
                               });
 
-      this.objects.push(travelModel);
+      this.collection.add([travelModel]);
 
       if (points.length > 0){
         var oStartTime = _.first(points).ts, 
@@ -91,9 +139,9 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     */ 
     this.removeAllObjects = function() {
       this.pause();
-      _.each(this.objects, function(obj) { obj.clearPos(); })
-      this.objects = [];
-      this.currentTime = this.beginTime = this.endTime = null;
+      this.collection.each(function(obj) { obj.clearPos(); })
+      this.collection.reset();
+      currentTime = beginTime = endTime = null;
       this.progress.val(undefined);
     }.bind(this)
 
@@ -129,7 +177,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
         interval = setInterval(function() {
           currentTime += (speed / (1000 / graduality));
 
-          _.each(this.objects, function(obj) {
+          this.collection.each(function(obj) {
             obj.calculatePos(currentTime);
           }.bind(this));
 
@@ -195,6 +243,13 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     clearPos: function() {
       this.unset({pos: null});
     }
+  });
+
+  /*
+  * Collection stores all travel models.
+  */
+  var TravelModelsCollection = Backbone.Collection.extend({
+    model: TravelModel
   });
 
   // Require export (create new travel system)

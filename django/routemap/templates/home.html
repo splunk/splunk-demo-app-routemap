@@ -89,6 +89,7 @@
             // Connect to search
             var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
             routesData.on('data', function() {
+                console.log('new data');
                 if (!routesData.hasData()) {
                     return;
                 }
