@@ -8,121 +8,142 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     el: $('#routes-map-view'),
 
     events: {
-      "change #input-speed-value": "changeSpeed",
-      "change #input-time": "changeTime"
+      "change #input-speed-value": "userChangeSpeed",
+      "change #input-time": "userChangeTime"
     },
 
     initialize: function() {
+      this.viewModel = new RoutesMapViewModel;
+
       this.spanSpeedValue = this.$('#span-speed-value');
       this.inputSpeedValue = this.$('#input-speed-value');
       this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
       this.labelCurrentTime = this.$('#bar-time-ranges div:nth-child(2) > span');
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
       this.inputTime = this.$('#input-time');
+
+      // Connect view to view-model
+      this.viewModel.on('change:currentTime', function() {
+        this.labelCurrentTime.text(
+          this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
+        this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
+        this.inputTime.val(this.viewModel.get('currentTime'));
+      }.bind(this));
+      this.viewModel.on('change:beginTime', function() {
+        if (this.viewModel.has('beginTime')) {
+          this.inputTime.prop('min', this.viewModel.get('beginTime'));
+          this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
+        } else {
+          this.labelBeginTime.text('');
+        }
+      }.bind(this));
+      this.viewModel.on('change:endTime', function() {
+        if (this.viewModel.has('endTime')) {
+          this.inputTime.prop('max', this.viewModel.get('endTime'));
+          this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
+        } else {
+          this.labelEndTime.text('');
+        }
+      }.bind(this));
+      this.viewModel.on('change:speed', function() {
+        this.labelCurrentTime.text(
+          this.viewModel.has('speed') ? (this.viewModel.get('speed') + 'X') : '');
+        this.inputSpeedValue.prop('disabled', !this.viewModel.has('speed'));
+      }.bind(this));
     },
-
-    changeSpeed: function() {
-      this.spanSpeedValue.text(this.inputSpeedValue.val());
-    },
-
-    changeTime: function() {
-      this.labelCurrentTime.text((new Date(parseFloat(this.inputTime.val()) * 1000)).toLocaleString());
-    }
-  });
-
-  function TravelSystem(toolbarSelector) {
-    this.collection = new TravelModelsCollection;
-
-    // UI Controls
-    this.progress = null;
-    this.spanTimeReport = null;
-    this.spanTimeBegin = null;
-    this.spanTimeEnd = null;
-    this.sliderSpeedControl = null;
-
-    var toolbar = $(toolbarSelector);
-    if (toolbar) {
-      this.progress = $('input:first-child', toolbar);
-      // var timeBar = toolbar.append('<div class="row-fluid"><div class="span2 text-left"/><div class="span8 text-center" /><div class="span2 text-right"/></div>');
-      // this.spanTimeReport = $('div > div:nth-child(2)', timeBar);
-      // this.spanTimeBegin = $('div > div:first-child', timeBar);
-      // this.spanTimeEnd = $('div > div:last-child', timeBar);
-      // var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
-    }
-
-    this.map = new GMaps({
-                      div: '#map',
-                      lat: 0,
-                      lng: 0,
-                      zoom: 2
-                    });
-
-    var bounds = null;
-
-    // Private members
-    var interval = null;
-    var graduality = 50;
-    var speed = 300;
-
-    var currentTime = null;
-    var beginTime = null;
-    var endTime = null;
 
     // Event handlers
-    this.collection.on('add', function(model) {
-      var points = model.get('points');
+    userChangeSpeed: function() {
+      this.viewModel.set('speed', this.inputSpeedValue.val());
+    },
 
-      _.each(points, function(point) { (bounds || (bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon)); })
+    userChangeTime: function() {
+      this.viewModel.setCurrentTime(parseFloat(this.inputTime.val()));
+    },
+  });
 
-      if (points.length > 0){
-        var oStartTime = _.first(points).ts, 
-            oEndTime = _.last(points).ts;
+  /*
+  * View-Model
+  */
+  var RoutesMapViewModel = Backbone.Model.extend({
+    defaults: {
+      graduality: 50,
+      speed: 300
+    },
 
-        if (oStartTime) {
-          beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
-          if (this.progress) this.progress.prop('min', beginTime);
+    initialize: function() {
+      // Initialize sub-models
+      this.collection = new TravelModelsCollection;
+      this.interval = null;
+      this.bounds = null;
+      this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
+
+      this.collection.on('add', function(model) {
+        var points = model.get('points');
+
+        _.each(points, function(point) { (this.bounds || (this.bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon)); }.bind(this))
+
+        if (points.length > 0){
+          var oStartTime = _.first(points).ts, 
+              oEndTime = _.last(points).ts;
+
+          if (oStartTime) {
+            this.set('beginTime', !this.has('beginTime') ? oStartTime : Math.min(oStartTime, this.get('beginTime')));
+          }
+
+          if (oEndTime) {
+            this.set('endTime', !this.has('endTime') ? oEndTime : Math.max(oEndTime, this.get('endTime')));
+          }
         }
 
-        if (oEndTime) {
-          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
-          if (this.progress) this.progress.prop('max', endTime);
-        }
-      }
-
-      var marker = null;
-      model.on('change:pos', function(model, pos) {
-        if (pos) {
-          if (marker) {
-            marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
+        var marker = null;
+        model.on('change:pos', function(model, pos) {
+          if (pos) {
+            if (marker) {
+              marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
+            } else {
+              marker = this.map.addMarker({
+                  lat: pos.lat,
+                  lng: pos.lon,
+                  title: model.get('title'),
+                  zIndex: 1
+              });
+            }
           } else {
-            marker = this.map.addMarker({
-                lat: pos.lat,
-                lng: pos.lon,
-                title: model.get('title'),
-                zIndex: 1
-            });
+            if (marker) {
+              marker.setMap(null);
+              marker = null;
+            }
           }
-        } else {
-          if (marker) {
-            marker.setMap(null);
-            marker = null;
-          }
-        }
-      }.bind(this)); 
-    }.bind(this));
+        }.bind(this)); 
+      }.bind(this));
 
-    this.collection.on('remove', function(model) {
-      model.clearPos();
-    });
+      this.collection.on('remove', function(model) {
+        model.clearPos();
+      });
+    },
 
-    // Public function
+    setCurrentTime: function(time) {
+      this.set('currentTime', time);
+      this.collection.each(function(obj) {
+        obj.calculatePos(time);
+      }.bind(this));
+    },
+
+    setBeginTime: function(time) {
+      this.set('beginTime', time);
+    },
+
+    setEndTime: function(time) {
+      this.set('endTime', time);
+    },
 
     /*
     * Add object on the map. 
     * @param title - will be used as a tooltip for marker.
     * @param points - array of points where each point is { ts: [float], lat: [float], lon: [float]}
     */
-    this.addObject = function(title, points) {
+    addObject: function(title, points) {
       points = _.sortBy(points || [], function(o) { return o.ts; });
 
       var travelModel = new TravelModel({
@@ -134,83 +155,53 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       this.collection.add([travelModel]);
 
       return travelModel;
-    }.bind(this);
+    },
 
     /*
     * Remove all tracking objects.
     */ 
-    this.removeAllObjects = function() {
+    removeAllObjects: function() {
       this.pause();
       this.collection.each(function(obj) { obj.clearPos(); })
       this.collection.reset();
-      currentTime = beginTime = endTime = null;
-      if (this.progress) {
-        this.progress.val(undefined);
-      }
-    }.bind(this)
+      this.unset({currentTime: null, beginTime: null, endTime: null});
+    },
 
     /*
     * Start travel system
     */
-    this.play = function() {
-      if (!beginTime || !endTime) {
-        // No objects
-        return;
+    play: function() {
+      if (!this.has('beginTime') || !this.has('endTime') || this.interval) {
+        // No objects or already in play mode
+        return; 
       }
 
-      if (bounds) {
-        this.map.fitBounds(bounds);
+      if (this.bounds) {
+        this.map.fitBounds(this.bounds);
       }
 
-      if (!currentTime) { currentTime = beginTime;}
-
-      if (this.progress) {
-        this.progress.val(currentTime);
+      if (!this.has('currentTime')) {
+        this.setCurrentTime(this.get('beginTime'));
       }
 
-      if (this.spanTimeBegin) { this.spanTimeBegin.text((new Date(currentTime * 1000)).toLocaleString()); }
-      if (this.spanTimeEnd) { this.spanTimeEnd.text((new Date(endTime * 1000)).toLocaleString()); }
-
-      if (this.sliderSpeedControl) {
-        this.sliderSpeedControl.val(speed);
-      }
-
-      var reportTime = function() {
-        if (this.spanTimeReport) { this.spanTimeReport.text((new Date(currentTime * 1000)).toLocaleString()); }
-      }.bind(this);
-
-      reportTime();
-
-      if (currentTime && endTime && currentTime < endTime) {
-        interval = setInterval(function() {
-          currentTime += (speed / (1000 / graduality));
-
-          this.collection.each(function(obj) {
-            obj.calculatePos(currentTime);
-          }.bind(this));
-
-          if (currentTime > endTime) {
+      this.interval = setInterval(function() {
+          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / (1000 / this.get('graduality'))));
+          if (this.get('currentTime') > this.get('endTime')) {
             this.pause();
-          } else {
-            if (this.progress) {
-              this.progress.val(currentTime);
-            }
-            reportTime();
-          }
-        }.bind(this), graduality);
-      }
-    }.bind(this);
+          } 
+        }.bind(this), this.get('graduality'));
+    }, 
 
     /*
     * Pause system.
     */
-    this.pause = function() {
-      if (interval) {
-        clearInterval(interval);
-        interval = null;
+    pause: function() {
+      if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
       }
-    }.bind(this);
-  }
+    }
+  });
 
   /*
   * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
@@ -260,14 +251,9 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     model: TravelModel
   });
 
-  var appView;
-
   // Require export (create new travel system)
-  return exports.create = function(toolbarSelector) {
-    if (!appView) {
-      appView = new RoutesMapView;
-    }
-    return new TravelSystem(toolbarSelector);
+  return exports.create = function() {
+    return new RoutesMapView();
   };
 });
 

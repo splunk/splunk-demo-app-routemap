@@ -90,7 +90,7 @@
                 el: searchPanel.append('div')
             }).render();
 
-            var travelSystem = travelSystemModule('#routes-map-view');
+            var travelSystem = travelSystemModule();
 
             // Connect to search
             var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
@@ -101,8 +101,8 @@
                 }
 
                 if (travelSystem) {
-                    travelSystem.pause();
-                    travelSystem.removeAllObjects();
+                    travelSystem.viewModel.pause();
+                    travelSystem.viewModel.removeAllObjects();
                 } 
 
                 var bounds = new google.maps.LatLngBounds();
@@ -125,10 +125,10 @@
                         }
                     }
 
-                    travelSystem.addObject('Route: ' + result.routeTag + ', bus: ' + result.id, points);
+                    travelSystem.viewModel.addObject('Route: ' + result.routeTag + ', bus: ' + result.id, points);
                 }
                 
-                travelSystem.play();
+                travelSystem.viewModel.play();
             });
         });
     </script>
