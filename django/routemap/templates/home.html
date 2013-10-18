@@ -13,18 +13,21 @@
         <div id="searchPanel">
         </div>
         <div id="routes-map-view">
+            <div>
+                <form class="form-inline">
+                    <label>Speed:</label>
+                    <input id="input-speed-value" type="range" min="0.1" max="300" class="input"/>
+                    <span class="help-block"><span id="span-speed-value">1</span>X</span>
+                    <label>Graduality:</label>
+                    <input id="input-graduality-value" type="range" min="1" max="20" class="input"/>
+                    <span class="help-block"><span id="span-graduality-value"></span> times per seconds</span>
+                </form>
+            </div>
             <div><input id="input-time" type="range" /></div>
             <div id="bar-time-ranges" class="row-fluid">
                 <div class="span2 text-left"><span><!--Begin time--></span></div>
                 <div class="span8 text-center"><span><!--Current time--></span></div>
                 <div class="span2 text-right"><span><!--End time--></span></div>
-            </div>
-            <div>
-                <form class="form-inline">
-                    <label>Speed:</label>
-                    <input id="input-speed-value" type="range" min="0.1" max="600"/>
-                    <span id="span-speed-value"></span>
-                </form>
             </div>
             <div id="map-wrapper">
                 <div id="map">

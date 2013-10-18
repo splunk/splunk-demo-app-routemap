@@ -1,15 +1,28 @@
-#map-wrapper {
-    background: white;
-    height: 500px;
-    width: 90%;
-    margin: 20px auto;
+#routes-map-view {
+    padding: 20px 0px;
 }
+
+    #routes-map-view > div {
+        width: 90%;
+        margin: 0px auto;
+    }
+
+    #routes-map-view #map-wrapper {
+        background: white;
+        height: 500px;
+        margin: 20px auto;
+    }
+
+    #routes-map-view input[type=range]:first-child {
+        width: 100%;
+    }
+
+    #routes-map-view .help-block {
+        display: inline-block;
+        margin-right: 30px;
+    }
 
 #map {
     height: 100%;
-    width: 100%;
-}
-
-#routes-map-view input[type=range]:first-child {
     width: 100%;
 }

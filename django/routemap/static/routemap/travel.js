@@ -8,8 +8,9 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     el: $('#routes-map-view'),
 
     events: {
-      "change #input-speed-value": "userChangeSpeed",
-      "change #input-time": "userChangeTime"
+      'change #input-speed-value': 'userChangeSpeed',
+      'change #input-graduality-value': 'userChangeGraduality',
+      'change #input-time': 'userChangeTime'
     },
 
     initialize: function() {
@@ -17,6 +18,8 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
 
       this.spanSpeedValue = this.$('#span-speed-value');
       this.inputSpeedValue = this.$('#input-speed-value');
+      this.spanGradualityValue = this.$('#span-graduality-value');
+      this.inputGradualityValue = this.$('#input-graduality-value');
       this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
       this.labelCurrentTime = this.$('#bar-time-ranges div:nth-child(2) > span');
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
@@ -47,16 +50,40 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
             }
           }.bind(this))
         .on('change:speed', function() {
-            this.labelCurrentTime.text(
-              this.viewModel.has('speed') ? (this.viewModel.get('speed') + 'X') : '');
-            this.inputSpeedValue.prop('disabled', !this.viewModel.has('speed'));
-          }.bind(this));
+            if (this.viewModel.has('speed')) {
+              var currentSpeed = this.viewModel.get('speed');
+              this.spanSpeedValue.text(currentSpeed);
+              this.inputSpeedValue.val(currentSpeed);
+              this.inputSpeedValue.prop('disabled', false);
+            } else {
+              this.spanSpeedValue.text('');
+              this.inputSpeedValue.prop('disabled', true);
+            }
+          }.bind(this))
+        .on('change:graduality', function() {
+            if (this.viewModel.has('graduality')) {
+              var currentGraduality = this.viewModel.get('graduality');
+              this.spanGradualityValue.text(currentGraduality);
+              this.inputGradualityValue.val(currentGraduality);
+              this.inputGradualityValue.prop('disabled', false);
+            } else {
+              this.spanGradualityValue.text('');
+              this.inputGradualityValue.prop('disabled', true);
+            }
+          }.bind(this))
+        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality');
     },
 
     // Event handlers
     userChangeSpeed: function() {
       this.viewModel.pause();
       this.viewModel.set('speed', this.inputSpeedValue.val());
+      this.viewModel.play();
+    },
+
+    userChangeGraduality: function() {
+      this.viewModel.pause();
+      this.viewModel.set('graduality', parseFloat(this.inputGradualityValue.val()));
       this.viewModel.play();
     },
 
@@ -72,8 +99,8 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
   */
   var RoutesMapViewModel = Backbone.Model.extend({
     defaults: {
-      graduality: 50,
-      speed: 300
+      graduality: 20,
+      speed: 150
     },
 
     initialize: function() {
@@ -190,11 +217,11 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       }
 
       this.interval = setInterval(function() {
-          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / (1000 / this.get('graduality'))));
+          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
           if (this.get('currentTime') > this.get('endTime')) {
             this.pause();
           } 
-        }.bind(this), this.get('graduality'));
+        }.bind(this), (1000 / this.get('graduality')));
     }, 
 
     /*
