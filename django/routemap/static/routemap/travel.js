@@ -10,14 +10,16 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     this.spanTimeReport = null;
     this.spanTimeBegin = null;
     this.spanTimeEnd = null;
+    this.sliderSpeedControl = null;
 
     var toolbar = $(toolbarSelector);
     if (toolbar) {
-      this.progress = $('meter', toolbar.append('<div><meter /></div>')).get(0);
+      this.progress = $('input:first-child', toolbar.append('<div><input type="range" /></div>'));
       var timeBar = toolbar.append('<div class="row-fluid"><div class="span2 text-left"/><div class="span8 text-center" /><div class="span2 text-right"/></div>');
       this.spanTimeReport = $('div > div:nth-child(2)', timeBar);
       this.spanTimeBegin = $('div > div:first-child', timeBar);
       this.spanTimeEnd = $('div > div:last-child', timeBar);
+      var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
     }
   }
 
@@ -44,18 +46,22 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
       }
 
       if (oEndTime) {
-        endTime = !endTime ? oEndTime : Math.min(oEndTime, endTime);
+        endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
       }
     });
 
     if (this.progress) {
-      this.progress.min = 0;
-      this.progress.max = (endTime - currentTime);
-      this.progress.value = 0;
+      this.progress.prop('min', currentTime);
+      this.progress.prop('max', endTime);
+      this.progress.val(currentTime);
     }
 
     if (this.spanTimeBegin) { this.spanTimeBegin.text((new Date(currentTime * 1000)).toLocaleString()); }
     if (this.spanTimeEnd) { this.spanTimeEnd.text((new Date(endTime * 1000)).toLocaleString()); }
+
+    if (this.sliderSpeedControl) {
+      this.sliderSpeedControl.val(speed);
+    }
 
     var reportTime = function() {
       if (this.spanTimeReport) { this.spanTimeReport.text((new Date(currentTime * 1000)).toLocaleString()); }
@@ -63,26 +69,27 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
     reportTime();
 
+    var graduality = 50;
+
     if (currentTime && endTime && currentTime < endTime) {
       this.interval = setInterval(function() {
-        var step = speed / 5;
+        var step = speed / (1000 / graduality);
         currentTime += step;
+
+        _.each(this.objects, function(obj) {
+          obj.move(currentTime);
+        }.bind(this));
+
         if (currentTime > endTime) {
           this.stop();
         } else {
           if (this.progress) {
-            this.progress.value += step;
+            this.progress.val(currentTime);
           }
           reportTime();
-
-          _.each(this.objects, function(obj) {
-            obj.move(currentTime);
-          }.bind(this));
         }
-      }.bind(this), 50);
+      }.bind(this), graduality);
     }
-
-    
   };
 
   TravelSystem.prototype.stop = function() {
@@ -94,67 +101,74 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
   function TravelObject(map, title) {
     this.points = [];
-    this.currentIndex = -1;
     this.map = map;
     this.marker = null;
     this.title = title;
-  }
 
-  TravelObject.prototype.addPoint = function(ts, lat, lon) {
-    this.points.push({ ts: ts, lat: lat, lon: lon });
-  };
+    // Private functions
+    var removeMarker = function() {
+      if (this.marker) {
+        this.marker.setMap(null);
+        this.marker = null;
+      }
+    }.bind(this);
 
-  TravelObject.prototype.start = function() {
-    // Prepare to travel - sort array
-    this.points = _.sortBy(this.points, function(o) { return o.ts; });
-    this.currentIndex = -1;
-  };
-
-  TravelObject.prototype.getStartTime = function() {
-    return (this.points.length === 0) ? null : this.points[0].ts;
-  };
-
-  TravelObject.prototype.getEndTime = function() {
-    return (this.points.length === 0) ? null : this.points[this.points.length - 1].ts;
-  };
-
-  TravelObject.prototype.move = function(currentTime) {
-    if (this.points.length > 0){
-      if (this.currentIndex + 1 >= this.points.length) {
-        if (this.marker) {
-          this.marker.setMap(null);
-          this.marker = null;
-        }
-      } else {
-        var previousIndex = this.currentIndex;
-        while (this.points[++this.currentIndex].ts <= currentTime) {};
-
-        if (this.currentIndex - previousIndex > 0) {
-          if (this.marker){
-            this.marker.setPosition( new google.maps.LatLng(this.points[this.currentIndex].lat, this.points[this.currentIndex].lon) );
-          } else {
-            this.marker = this.map.addMarker({
-                optimized: false,
-                lat: parseFloat(this.points[this.currentIndex].lat),
-                lng: parseFloat(this.points[this.currentIndex].lon),
-                title: this.title,
-                zIndex: 1
-            });
-          }
-        } 
-        else {
-          var currentPoint = this.points[this.currentIndex];
-          var nextPoint = this.points[this.currentIndex + 1];
-          var p = (currentTime - currentPoint)/(nextPoint - currentPoint);
-          var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
-          var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
-          this.marker.setPosition( new google.maps.LatLng(this.points[this.currentIndex].lat, this.points[this.currentIndex].lon) );
+    // Public functions
+    this.move = function(currentTime) {
+      // Trying to find point 
+      var nextPointIndex = -1;
+      while ((++nextPointIndex) < this.points.length) {
+        if (this.points[nextPointIndex].ts > currentTime) {
+          break;
         }
       }
-    }
-    
-  };
 
+      if (nextPointIndex == 0 || nextPointIndex >= this.points.length) {
+        // Current object does not have points in this time
+        removeMarker();
+        return;
+      }
+
+      var currentPoint = this.points[nextPointIndex - 1];
+      var nextPoint = this.points[nextPointIndex];
+      var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
+      var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
+      var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
+
+      if (this.marker) {
+        this.marker.setPosition(new google.maps.LatLng(lat, lon));
+      } else {
+        this.marker = this.map.addMarker({
+            lat: lat,
+            lng: lon,
+            title: this.title,
+            zIndex: 1
+        });
+      }
+    }.bind(this);
+
+    this.addPoint = function(ts, lat, lon) {
+      if (typeof lat !== 'number') { lat = parseFloat(lat); }
+      if (typeof lon !== 'number') { lon = parseFloat(lon); }
+      if (typeof ts !== 'number') { ts = parseFloat(ts); }
+      this.points.push({ ts: ts, lat: lat, lon: lon });
+    }.bind(this);
+
+    this.start = function() {
+      // Prepare to travel - sort array
+      this.points = _.sortBy(this.points, function(o) { return o.ts; });
+    }.bind(this);
+
+    this.getStartTime = function() {
+      return (this.points.length === 0) ? null : this.points[0].ts;
+    }.bind(this);
+
+    this.getEndTime = function() {
+      return (this.points.length === 0) ? null : this.points[this.points.length - 1].ts;
+    }.bind(this);
+  }
+
+  // Require export (create new travel system)
   return exports.create = function(map, toolbarSelector) {
     return new TravelSystem(map, toolbarSelector);
   };
