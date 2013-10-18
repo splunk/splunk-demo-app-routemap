@@ -12,6 +12,14 @@
     <div>
         <div id="searchPanel">
         </div>
+        <div id="customToolbar">
+            <div>
+                <meter id="travelSystemProgress" />
+            </div>
+            <div>
+                <span id="timeReport"></span>
+            </div>
+        </div>
         <div id="map-wrapper">
             <div id="map">
             </div>
@@ -95,7 +103,7 @@
                     travelSystem.stop();
                 } 
 
-                travelSystem = travelSystemModule(map);
+                travelSystem = travelSystemModule(map, '#travelSystemProgress', '#timeReport');
 
                 var bounds = new google.maps.LatLngBounds();
                 map.removePolylines();
@@ -104,7 +112,7 @@
                 for (var rIndex = 0; rIndex < Math.min(100, results.length); rIndex++) {
                     var result = results[rIndex];
 
-                    var travelObject = travelSystem.addObject();
+                    var travelObject = travelSystem.addObject('Route: ' + result.routeTag + ', bus: ' + result.id);
 
                     var latValues = result['latArray'];
                     var lonValues = result['lonArray'];
@@ -112,7 +120,6 @@
 
                     for (var i = 0; i < Math.min(tsValues.length, Math.min(latValues.length, lonValues.length)); i++) {
                         if (latValues[i] && lonValues[i] && tsValues[i]) {
-                            //path.push([latValues[i], lonValues[i]]);
                             bounds.extend(new google.maps.LatLng(latValues[i], lonValues[i]));
                             travelObject.addPoint(tsValues[i], latValues[i], lonValues[i]);
                         }
@@ -121,7 +128,7 @@
 
                 map.fitBounds(bounds);
                 
-                travelSystem.start();
+                travelSystem.start(60);
             });
         });
     </script>

@@ -1,30 +1,34 @@
 define('travelSystem', ['underscore', 'exports'], function(_, exports) {
 
-  function TravelSystem(map) {
+  function TravelSystem(map, progressSelector, timeReportSelector) {
     this.objects = [];
     this.map = map;
     this.interval = null;
+    this.progress = $(progressSelector).get(0);
+    this.spanTimeReport = $(timeReportSelector);
   }
 
-  TravelSystem.prototype.addObject = function() {
-    var travelObject = new TravelObject(this.map);
+  TravelSystem.prototype.addObject = function(title) {
+    var travelObject = new TravelObject(this.map, title);
     this.objects.push(travelObject);
     return travelObject;
   };
 
   TravelSystem.prototype.start = function(speed) {
     if (!speed) {
-      speed = 60;
+      speed = 1;
     }
 
-    var currentTime = null;
-    var endTime = null;
+    var currentTime = null,
+        beginTime = null,
+        endTime = null;
+
     _.each(this.objects, function(obj) {
       obj.start();
       var oStartTime = obj.getStartTime(), oEndTime = obj.getEndTime();
 
       if (oStartTime) {
-        currentTime = !currentTime ? oStartTime : Math.min(oStartTime, currentTime);
+        beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
       }
 
       if (oEndTime) {
@@ -32,16 +36,48 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
       }
     });
 
-    this.interval = setInterval(function() {
-      currentTime += speed;
-      if (currentTime > endTime) {
-        this.stop();
-      } else {
-        _.each(this.objects, function(obj) {
-          obj.move(currentTime);
-        }.bind(this));
+    if (this.progress) {
+      this.progress.min = 0;
+      this.progress.max = (endTime - beginTime);
+      this.progress.value = 0;
+    }
+
+    currentTime = beginTime;
+
+    var reportTime = function() {
+      if (this.spanTimeReport) {
+        this.spanTimeReport.text(
+          (new Date(currentTime * 1000)).toLocaleString() 
+          + ' (begin: ' 
+          + (new Date(beginTime * 1000)).toLocaleString() 
+          + ', end: ' 
+          + (new Date(endTime * 1000)).toLocaleString()
+          + ')'
+        );
       }
-    }.bind(this), 1000);
+    }.bind(this);
+
+    reportTime();
+
+    if (currentTime && endTime && currentTime < endTime) {
+      this.interval = setInterval(function() {
+        currentTime += speed;
+        if (currentTime > endTime) {
+          this.stop();
+        } else {
+          if (this.progress) {
+            this.progress.value += speed;
+          }
+          reportTime();
+
+          _.each(this.objects, function(obj) {
+            obj.move(currentTime);
+          }.bind(this));
+        }
+      }.bind(this), 1000);
+    }
+
+    
   };
 
   TravelSystem.prototype.stop = function() {
@@ -51,11 +87,12 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     }
   }
 
-  function TravelObject(map) {
+  function TravelObject(map, title) {
     this.points = [];
     this.currentIndex = -1;
     this.map = map;
     this.marker = null;
+    this.title = title;
   }
 
   TravelObject.prototype.addPoint = function(ts, lat, lon) {
@@ -95,8 +132,8 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
                 optimized: false,
                 lat: parseFloat(this.points[this.currentIndex].lat),
                 lng: parseFloat(this.points[this.currentIndex].lon),
-                title: "Hello",
-                zIndex: 10,
+                title: this.title,
+                zIndex: 1,
                 icon: "http://www.globalincidentmap.com/mapicons/general.gif"
             });
           }
@@ -109,8 +146,8 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     
   };
 
-  return exports.create = function(map) {
-    return new TravelSystem(map);
+  return exports.create = function(map, progressSelector, timeReportSelector) {
+    return new TravelSystem(map, progressSelector, timeReportSelector);
   };
 });
 
