@@ -138,8 +138,7 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
                 lat: parseFloat(this.points[this.currentIndex].lat),
                 lng: parseFloat(this.points[this.currentIndex].lon),
                 title: this.title,
-                zIndex: 1,
-                icon: "http://www.globalincidentmap.com/mapicons/general.gif"
+                zIndex: 1
             });
           }
         } 
