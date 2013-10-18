@@ -1,4 +1,4 @@
-define('travelSystem', ['underscore', 'exports'], function(_, exports) {
+define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
 
   function TravelSystem(map, toolbarSelector) {
     this.objects = [];
@@ -24,7 +24,7 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     // Private members
     var interval = null;
     var graduality = 50;
-    var speed = 100;
+    var speed = 200;
 
     var currentTime = null;
     var beginTime = null;
@@ -38,12 +38,18 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
     * @param points - array of points where each point is { ts: [float], lat: [float], lon: [float]}
     */
     this.addObject = function(title, points) {
-      var travelObject = new TravelObject(this.map, title, points);
+      points = _.sortBy(points || [], function(o) { return o.ts; });
+      var travelObject = new TravelObject({
+                                map: this.map, 
+                                title: title, 
+                                points: points
+                              });
+
       this.objects.push(travelObject);
 
-      if (travelObject.points.length > 0){
-        var oStartTime = _.first(travelObject.points).ts, 
-            oEndTime = _.last(travelObject.points).ts;
+      if (points.length > 0){
+        var oStartTime = _.first(points).ts, 
+            oEndTime = _.last(points).ts;
 
         if (oStartTime) {
           beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
@@ -132,61 +138,53 @@ define('travelSystem', ['underscore', 'exports'], function(_, exports) {
   /*
   * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
   */
-  function TravelObject(map, title, points) {
-    this.points = _.sortBy(points || [], function(o) { return o.ts; });
-    this.title = title;
-
-    // Private members
-    var marker = null; // Google map marker
-
-    // Public functions
-
+  var TravelObject = Backbone.Model.extend({
     /*
     * Place object on map in current time.
     */
-    this.move = function(currentTime) {
+    move: function(currentTime) {
       // Trying to find point 
       var nextPointIndex = -1;
-      while ((++nextPointIndex) < this.points.length) {
-        if (this.points[nextPointIndex].ts > currentTime) {
+      while ((++nextPointIndex) < this.get('points').length) {
+        if (this.get('points')[nextPointIndex].ts > currentTime) {
           break;
         }
       }
 
-      if (nextPointIndex == 0 || nextPointIndex >= this.points.length) {
+      if (nextPointIndex == 0 || nextPointIndex >= this.get('points').length) {
         // Current object does not have points in this time
         this.removeMarker();
       } else {
         // Let's find position of current object and place it on map
-        var currentPoint = this.points[nextPointIndex - 1];
-        var nextPoint = this.points[nextPointIndex];
+        var currentPoint = this.get('points')[nextPointIndex - 1];
+        var nextPoint = this.get('points')[nextPointIndex];
         var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
         var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
         var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
 
-        if (marker) {
-          marker.setPosition(new google.maps.LatLng(lat, lon));
+        if (this.get('marker')) {
+          this.get('marker').setPosition(new google.maps.LatLng(lat, lon));
         } else {
-          marker = map.addMarker({
+          this.set('marker', this.get('map').addMarker({
               lat: lat,
               lng: lon,
-              title: this.title,
+              title: this.get('title'),
               zIndex: 1
-          });
+          }));
         }
       }
-    }.bind(this);
+    },
 
     /*
     * Remove marker from map.
     */
-    this.removeMarker = function() {
-      if (marker) {
-        marker.setMap(null);
-        marker = null;
+    removeMarker: function() {
+      if (this.get('marker')) {
+        this.get('marker').setMap(null);
+        this.set('marker', null);
       }
-    }.bind(this);
-  }
+    }
+  });
 
   // Require export (create new travel system)
   return exports.create = function(map, toolbarSelector) {
