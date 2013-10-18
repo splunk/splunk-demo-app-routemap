@@ -1,8 +1,37 @@
 define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
 
-  function TravelSystem(map, toolbarSelector) {
+  /*
+  * Routes map view
+  */
+  var RoutesMapView = Backbone.View.extend({
+    
+    el: $('#routes-map-view'),
+
+    events: {
+      "change #input-speed-value": "changeSpeed",
+      "change #input-time": "changeTime"
+    },
+
+    initialize: function() {
+      this.spanSpeedValue = this.$('#span-speed-value');
+      this.inputSpeedValue = this.$('#input-speed-value');
+      this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
+      this.labelCurrentTime = this.$('#bar-time-ranges div:nth-child(2) > span');
+      this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
+      this.inputTime = this.$('#input-time');
+    },
+
+    changeSpeed: function() {
+      this.spanSpeedValue.text(this.inputSpeedValue.val());
+    },
+
+    changeTime: function() {
+      this.labelCurrentTime.text((new Date(parseFloat(this.inputTime.val()) * 1000)).toLocaleString());
+    }
+  });
+
+  function TravelSystem(toolbarSelector) {
     this.collection = new TravelModelsCollection;
-    this.map = map;
 
     // UI Controls
     this.progress = null;
@@ -13,15 +42,22 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
 
     var toolbar = $(toolbarSelector);
     if (toolbar) {
-      this.progress = $('input:first-child', toolbar.append('<div><input type="range" /></div>'));
-      var timeBar = toolbar.append('<div class="row-fluid"><div class="span2 text-left"/><div class="span8 text-center" /><div class="span2 text-right"/></div>');
-      this.spanTimeReport = $('div > div:nth-child(2)', timeBar);
-      this.spanTimeBegin = $('div > div:first-child', timeBar);
-      this.spanTimeEnd = $('div > div:last-child', timeBar);
-      var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
+      this.progress = $('input:first-child', toolbar);
+      // var timeBar = toolbar.append('<div class="row-fluid"><div class="span2 text-left"/><div class="span8 text-center" /><div class="span2 text-right"/></div>');
+      // this.spanTimeReport = $('div > div:nth-child(2)', timeBar);
+      // this.spanTimeBegin = $('div > div:first-child', timeBar);
+      // this.spanTimeEnd = $('div > div:last-child', timeBar);
+      // var speedBar = toolbar.append('<div><form class="form-inline"><label>Speed:</label><input type="range" min="0.1" max="600"/><span></span></form></div>');
     }
 
+    this.map = new GMaps({
+                      div: '#map',
+                      lat: 0,
+                      lng: 0,
+                      zoom: 2
+                    });
 
+    var bounds = null;
 
     // Private members
     var interval = null;
@@ -36,18 +72,20 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     this.collection.on('add', function(model) {
       var points = model.get('points');
 
+      _.each(points, function(point) { (bounds || (bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon)); })
+
       if (points.length > 0){
         var oStartTime = _.first(points).ts, 
             oEndTime = _.last(points).ts;
 
         if (oStartTime) {
           beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
-          this.progress.prop('min', beginTime);
+          if (this.progress) this.progress.prop('min', beginTime);
         }
 
         if (oEndTime) {
           endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
-          this.progress.prop('max', endTime);
+          if (this.progress) this.progress.prop('max', endTime);
         }
       }
 
@@ -95,42 +133,6 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
 
       this.collection.add([travelModel]);
 
-      if (points.length > 0){
-        var oStartTime = _.first(points).ts, 
-            oEndTime = _.last(points).ts;
-
-        if (oStartTime) {
-          beginTime = !beginTime ? oStartTime : Math.min(oStartTime, beginTime);
-          this.progress.prop('min', beginTime);
-        }
-
-        if (oEndTime) {
-          endTime = !endTime ? oEndTime : Math.max(oEndTime, endTime);
-          this.progress.prop('max', endTime);
-        }
-      }
-
-      var marker = null;
-      travelModel.on('change:pos', function(model, pos) {
-        if (pos) {
-          if (marker) {
-            marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
-          } else {
-            marker = this.map.addMarker({
-                lat: pos.lat,
-                lng: pos.lon,
-                title: model.get('title'),
-                zIndex: 1
-            });
-          }
-        } else {
-          if (marker) {
-            marker.setMap(null);
-            marker = null;
-          }
-        }
-      }.bind(this)); 
-
       return travelModel;
     }.bind(this);
 
@@ -142,7 +144,9 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       this.collection.each(function(obj) { obj.clearPos(); })
       this.collection.reset();
       currentTime = beginTime = endTime = null;
-      this.progress.val(undefined);
+      if (this.progress) {
+        this.progress.val(undefined);
+      }
     }.bind(this)
 
     /*
@@ -152,6 +156,10 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
       if (!beginTime || !endTime) {
         // No objects
         return;
+      }
+
+      if (bounds) {
+        this.map.fitBounds(bounds);
       }
 
       if (!currentTime) { currentTime = beginTime;}
@@ -252,9 +260,14 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     model: TravelModel
   });
 
+  var appView;
+
   // Require export (create new travel system)
-  return exports.create = function(map, toolbarSelector) {
-    return new TravelSystem(map, toolbarSelector);
+  return exports.create = function(toolbarSelector) {
+    if (!appView) {
+      appView = new RoutesMapView;
+    }
+    return new TravelSystem(toolbarSelector);
   };
 });
 
