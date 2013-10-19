@@ -26,12 +26,15 @@
         margin-left: 30px;
     }
 
-    #routes-map-view label.checkbox {
-        padding-bottom: 7px;
+    #routes-map-view label.radio {
+        padding-top: 0px;
+        padding-bottom: 0px;
+        padding-right: 7px;
+        display: inline-block;
     }
 
-        #routes-map-view label.checkbox input[type=checkbox] {
-            margin-top: 7px;
+        #routes-map-view label.radio input[type=radio] {
+            margin-top: 0px;
         }
 
 #map {
