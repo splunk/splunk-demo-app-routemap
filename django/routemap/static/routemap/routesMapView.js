@@ -1,4 +1,4 @@
-define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
+define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
 
   /*
   * Routes map view

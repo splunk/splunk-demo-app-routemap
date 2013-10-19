@@ -41,7 +41,7 @@
 
 {% block js %}
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
-    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/travel.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/routesMapView.js"></script>
     <!-- https://github.com/hpneo/gmaps -->
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.5/gmaps.min.js"></script>
     <script>
@@ -52,7 +52,7 @@
             'splunkjs/mvc/tableview',
             'splunkjs/mvc/searchmanager',
             'underscore',
-            'travelSystem'
+            'routesMapView'
         ];
         require(deps, function(mvc) {
             var SearchbarView = require('splunkjs/mvc/searchbarview');
@@ -60,7 +60,7 @@
             var TableView = require('splunkjs/mvc/tableview');
             var SearchManager = require('splunkjs/mvc/searchmanager');
             var _ = require('underscore');
-            var travelSystemModule = require('travelSystem');
+            var travelSystemModule = require('routesMapView');
 
             // Initialize new search manager
 
