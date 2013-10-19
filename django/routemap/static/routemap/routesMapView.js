@@ -86,15 +86,17 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     // Event handlers
     userChangeSpeed: function() {
-      this.viewModel.pause();
+      var isPlaying = this.viewModel.has('playInterval');
+      if (isPlaying) this.viewModel.pause();
       this.viewModel.set('speed', this.inputSpeedValue.val());
-      this.viewModel.play();
+      if (isPlaying) this.viewModel.play();
     },
 
     userChangeGraduality: function() {
-      this.viewModel.pause();
+      var isPlaying = this.viewModel.has('playInterval');
+      if (isPlaying) this.viewModel.pause();
       this.viewModel.set('graduality', parseFloat(this.inputGradualityValue.val()));
-      this.viewModel.play();
+      if (isPlaying) this.viewModel.play();
     },
 
     userChangeTime: function() {

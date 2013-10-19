@@ -24,12 +24,13 @@
     #routes-map-view label[for=input-graduality-value],
     #routes-map-view label[for=input-speed-value] {
         margin-left: 30px;
+        margin-right: 10px;
     }
 
     #routes-map-view label.radio {
         padding-top: 0px;
         padding-bottom: 0px;
-        padding-right: 7px;
+        padding-right: 15px;
         display: inline-block;
     }
 
@@ -40,4 +41,9 @@
 #map {
     height: 100%;
     width: 100%;
+}
+
+.min-width-30 {
+    min-width: 30px;
+    display: inline-block;
 }
