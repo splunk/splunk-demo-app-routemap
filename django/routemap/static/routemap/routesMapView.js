@@ -12,7 +12,8 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
       'change #input-graduality-value': 'userChangeGraduality',
       'change #input-time': 'userChangeTime',
       'click #button-play': 'userPlay',
-      'click #button-pause': 'userPause'
+      'click #button-pause': 'userPause',
+      'click #button-autozoom': 'userAutoZoom'
     },
 
     initialize: function() {
@@ -107,6 +108,10 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     userPause: function() {
       this.viewModel.pause();
+    },
+
+    userAutoZoom: function() {
+      this.viewModel.autoZoom();
     }
   });
 
@@ -223,10 +228,6 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
         return; 
       }
 
-      if (this.bounds) {
-        this.map.fitBounds(this.bounds);
-      }
-
       if (!this.has('currentTime')) {
         this.setCurrentTime(this.get('beginTime'));
       }
@@ -246,6 +247,12 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
       if (this.has('playInterval')) {
         clearInterval(this.get('playInterval'));
         this.unset('playInterval');
+      }
+    },
+
+    autoZoom: function() {
+      if (this.bounds) {
+        this.map.fitBounds(this.bounds);
       }
     }
   });
