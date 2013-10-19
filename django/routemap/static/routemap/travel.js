@@ -10,12 +10,16 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     events: {
       'change #input-speed-value': 'userChangeSpeed',
       'change #input-graduality-value': 'userChangeGraduality',
-      'change #input-time': 'userChangeTime'
+      'change #input-time': 'userChangeTime',
+      'click #button-play': 'userPlay',
+      'click #button-pause': 'userPause'
     },
 
     initialize: function() {
       this.viewModel = new RoutesMapViewModel;
 
+      this.buttonPlay = this.$('#button-play');
+      this.buttonPause = this.$('#button-pause');
       this.spanSpeedValue = this.$('#span-speed-value');
       this.inputSpeedValue = this.$('#input-speed-value');
       this.spanGradualityValue = this.$('#span-graduality-value');
@@ -71,7 +75,12 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
               this.inputGradualityValue.prop('disabled', true);
             }
           }.bind(this))
-        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality');
+        .on('change:playInterval change:currentTime', function() {
+            var isPlaying = this.viewModel.has('playInterval');
+            this.buttonPlay.prop('disabled', !this.viewModel.has('currentTime') || isPlaying);
+            this.buttonPause.prop('disabled', !isPlaying);
+          }.bind(this))
+        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval');
     },
 
     // Event handlers
@@ -90,8 +99,15 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     userChangeTime: function() {
       this.viewModel.pause();
       this.viewModel.setCurrentTime(parseFloat(this.inputTime.val()));
+    },
+
+    userPlay: function() {
       this.viewModel.play();
     },
+
+    userPause: function() {
+      this.viewModel.pause();
+    }
   });
 
   /*
@@ -106,7 +122,6 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     initialize: function() {
       // Initialize sub-models
       this.collection = new TravelModelsCollection;
-      this.interval = null;
       this.bounds = null;
       this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
 
@@ -203,7 +218,7 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
     * Start travel system
     */
     play: function() {
-      if (!this.has('beginTime') || !this.has('endTime') || this.interval) {
+      if (!this.has('beginTime') || !this.has('endTime') || this.has('playInterval')) {
         // No objects or already in play mode
         return; 
       }
@@ -216,21 +231,21 @@ define('travelSystem', ['underscore', 'backbone', 'exports', ], function(_, Back
         this.setCurrentTime(this.get('beginTime'));
       }
 
-      this.interval = setInterval(function() {
+      this.set('playInterval', setInterval(function() {
           this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
           if (this.get('currentTime') > this.get('endTime')) {
             this.pause();
           } 
-        }.bind(this), (1000 / this.get('graduality')));
+        }.bind(this), (1000 / this.get('graduality'))));
     }, 
 
     /*
     * Pause system.
     */
     pause: function() {
-      if (this.interval) {
-        clearInterval(this.interval);
-        this.interval = null;
+      if (this.has('playInterval')) {
+        clearInterval(this.get('playInterval'));
+        this.unset('playInterval');
       }
     }
   });

@@ -19,8 +19,20 @@
 
     #routes-map-view .help-block {
         display: inline-block;
-        margin-right: 30px;
     }
+
+    #routes-map-view label[for=input-graduality-value],
+    #routes-map-view label[for=input-speed-value] {
+        margin-left: 30px;
+    }
+
+    #routes-map-view label.checkbox {
+        padding-bottom: 7px;
+    }
+
+        #routes-map-view label.checkbox input[type=checkbox] {
+            margin-top: 7px;
+        }
 
 #map {
     height: 100%;
