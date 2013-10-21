@@ -13,7 +13,9 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
       'change #input-time': 'userChangeTime',
       'click #button-play': 'userPlay',
       'click #button-pause': 'userPause',
-      'click #button-autozoom': 'userAutoZoom'
+      'click #button-autozoom': 'userAutoZoom',
+      'click #map-objects-header input[type=checkbox]:first': 'userToggleAllObjects',
+      'click #map-objects-header input[type=checkbox]:last': 'userToggleAllRoutes',
     },
 
     initialize: function() {
@@ -30,6 +32,8 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
       this.inputTime = this.$('#input-time');
       this.objectsListView = this.$('#map-objects-list');
+      this.checkboxAllObjects = this.$('#map-objects-header input[type=checkbox]:first');
+      this.checkboxAllRoutes = this.$('#map-objects-header input[type=checkbox]:last');
 
       // Connect view to view-model
       this.viewModel
@@ -119,6 +123,21 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     userAutoZoom: function() {
       this.viewModel.autoZoom();
+    },
+
+    userToggleAllRoutes: function() {
+      var value = this.checkboxAllRoutes.prop('checked');
+      this.viewModel.collection.each(function(model) {
+        model.set('showRoute', value);
+      });
+    },
+
+    userToggleAllObjects: function() {
+      this.viewModel.pause();
+      var value = this.checkboxAllObjects.prop('checked');
+      this.viewModel.collection.each(function(model) {
+        model.set('showObject', value);
+      });
     }
   });
 
@@ -158,44 +177,48 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
         var marker = null;
         var polyline = null;
         model.on('change:pos', function(model, pos) {
-          if (pos) {
-            if (marker) {
-              marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
-            } else {
-              marker = this.map.addMarker({
-                  lat: pos.lat,
-                  lng: pos.lon,
-                  title: model.get('title'),
-                  zIndex: 1
-              });
-            }
-          } else {
-            if (marker) {
-              marker.setMap(null);
-              marker = null;
-            }
-          }
-        }.bind(this));
+              if (pos) {
+                if (marker) {
+                  marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
+                } else {
+                  marker = this.map.addMarker({
+                      lat: pos.lat,
+                      lng: pos.lon,
+                      title: model.get('title'),
+                      zIndex: 1
+                  });
+                }
+              } else {
+                if (marker) {
+                  marker.setMap(null);
+                  marker = null;
+                }
+              }
+            }.bind(this))
+          .on('change:showRoute', function(model, showRoute) {
+              if (showRoute) {
+                var path = _.map(model.get('points'), function(p) {
+                  return [p.lat, p.lon];
+                });
 
-        model.on('change:showRoute', function(model, showRoute) {
-          if (showRoute) {
-            var path = _.map(model.get('points'), function(p) {
-              return [p.lat, p.lon];
-            });
-
-            polyline = this.map.drawPolyline({
-              path: path,
-              strokeColor: '#131540',
-              strokeOpacity: 0.6,
-              strokeWeight: 6
-            });
-          } else {
-            if (polyline) {
-              polyline.setMap(null);
-              polyline = null;
-            }
-          }
-        }.bind(this));
+                polyline = this.map.drawPolyline({
+                  path: path,
+                  strokeColor: '#131540',
+                  strokeOpacity: 0.6,
+                  strokeWeight: 6
+                });
+              } else {
+                if (polyline) {
+                  polyline.setMap(null);
+                  polyline = null;
+                }
+              }
+            }.bind(this))
+          .on('change:showObject', function(model, showObject) {
+              if (showObject) {
+                model.calculatePos(this.get('currentTime'))
+              }
+            }.bind(this))
       }.bind(this));
 
       this.collection.on('remove', function(model) {
@@ -363,6 +386,16 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
     events: {
       "click input[type=checkbox]:first": "toggleShowObject",
       "click input[type=checkbox]:last": "toggleShowRoute"
+    },
+
+    initialize: function() {
+      this.model
+        .on('change:showRoute', function(model, showRoute) {
+            this.$('input[type=checkbox]:last').prop('checked', showRoute);
+          }.bind(this))
+        .on('change:showObject', function(model, showObject) {
+            this.$('input[type=checkbox]:first').prop('checked', showObject);
+          }.bind(this));
     },
 
     render: function() {
