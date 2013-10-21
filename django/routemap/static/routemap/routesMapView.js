@@ -29,6 +29,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
       this.labelCurrentTime = this.$('#bar-time-ranges div:nth-child(2) > span');
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
       this.inputTime = this.$('#input-time');
+      this.objectsListView = this.$('#map-objects-list');
 
       // Connect view to view-model
       this.viewModel
@@ -82,6 +83,10 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
             this.buttonPause.prop('disabled', !isPlaying);
           }.bind(this))
         .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval');
+
+        this.listenTo(this.viewModel.collection, 'add', function(model) {
+          this.objectsListView.append((new MapObjectListView({model: model})).render().el);
+        }.bind(this))
     },
 
     // Event handlers
@@ -128,7 +133,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     initialize: function() {
       // Initialize sub-models
-      this.collection = new TravelModelsCollection;
+      this.collection = new MapObjectsCollection;
       this.bounds = null;
       this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
 
@@ -151,6 +156,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
         }
 
         var marker = null;
+        var polyline = null;
         model.on('change:pos', function(model, pos) {
           if (pos) {
             if (marker) {
@@ -169,7 +175,27 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
               marker = null;
             }
           }
-        }.bind(this)); 
+        }.bind(this));
+
+        model.on('change:showRoute', function(model, showRoute) {
+          if (showRoute) {
+            var path = _.map(model.get('points'), function(p) {
+              return [p.lat, p.lon];
+            });
+
+            polyline = this.map.drawPolyline({
+              path: path,
+              strokeColor: '#131540',
+              strokeOpacity: 0.6,
+              strokeWeight: 6
+            });
+          } else {
+            if (polyline) {
+              polyline.setMap(null);
+              polyline = null;
+            }
+          }
+        }.bind(this));
       }.bind(this));
 
       this.collection.on('remove', function(model) {
@@ -200,15 +226,15 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
     addObject: function(title, points) {
       points = _.sortBy(points || [], function(o) { return o.ts; });
 
-      var travelModel = new TravelModel({
-                                map: this.map, 
+      var travelObject = new MapObject({
                                 title: title, 
-                                points: points
+                                points: points,
+                                visible: true
                               });
 
-      this.collection.add([travelModel]);
+      this.collection.add([travelObject]);
 
-      return travelModel;
+      return travelObject;
     },
 
     /*
@@ -262,33 +288,53 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
   /*
   * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
   */
-  var TravelModel = Backbone.Model.extend({
+  var MapObject = Backbone.Model.extend({
+
+    defaults: function() {
+      return {
+        title: "unknown object",
+        points: [],
+        showObject: true,
+        showRoute: false
+      };
+    },
+
+    initialize: function() {
+      this.on('change:showObject', function() {
+        if (!this.get('showObject')) {
+          this.clearPos();
+        }
+      }.bind(this))
+    },
+
     /*
     * Place object on map in current time.
     */
     calculatePos: function(currentTime) {
-      // Trying to find point 
-      var points = this.get('points');
+      if (this.get('showObject')) {
+        // Trying to find point 
+        var points = this.get('points');
 
-      var nextPointIndex = -1;
-      while ((++nextPointIndex) < points.length) {
-        if (points[nextPointIndex].ts > currentTime) {
-          break;
+        var nextPointIndex = -1;
+        while ((++nextPointIndex) < points.length) {
+          if (points[nextPointIndex].ts > currentTime) {
+            break;
+          }
         }
-      }
 
-      if (nextPointIndex == 0 || nextPointIndex >= points.length) {
-        // Current object does not have points in this time
-        this.clearPos();
-      } else {
-        // Let's find position of current object and place it on map
-        var currentPoint = points[nextPointIndex - 1];
-        var nextPoint = points[nextPointIndex];
-        var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
-        var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
-        var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
+        if (nextPointIndex == 0 || nextPointIndex >= points.length) {
+          // Current object does not have points in this time
+          this.clearPos();
+        } else {
+          // Let's find position of current object and place it on map
+          var currentPoint = points[nextPointIndex - 1];
+          var nextPoint = points[nextPointIndex];
+          var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
+          var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
+          var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
 
-        this.set({pos: { lat: lat, lon: lon }});
+          this.set({pos: { lat: lat, lon: lon }});
+        }
       }
     },
 
@@ -297,14 +343,47 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
     */
     clearPos: function() {
       this.unset({pos: null});
+    },
+
+    toggleShowRoute: function() {
+      this.set({showRoute: !this.get('showRoute')});
+    },
+
+    toggleShowObject: function() {
+      this.set({showObject: !this.get('showObject')});
     }
   });
+
+  var MapObjectListView = Backbone.View.extend({
+    
+    tagName: 'li',
+
+    template: _.template($('#map-object-list-template').html()),
+
+    events: {
+      "click input[type=checkbox]:first": "toggleShowObject",
+      "click input[type=checkbox]:last": "toggleShowRoute"
+    },
+
+    render: function() {
+      this.$el.html(this.template(this.model.toJSON()));
+      return this;
+    },
+
+    toggleShowObject: function() {
+      this.model.toggleShowObject();
+    },
+
+    toggleShowRoute: function() {
+      this.model.toggleShowRoute();
+    }
+  })
 
   /*
   * Collection stores all travel models.
   */
-  var TravelModelsCollection = Backbone.Collection.extend({
-    model: TravelModel
+  var MapObjectsCollection = Backbone.Collection.extend({
+    model: MapObject
   });
 
   // Require export (create new travel system)

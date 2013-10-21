@@ -45,8 +45,29 @@
                 <div class="span8 text-center"><span><!--Current time--></span></div>
                 <div class="span2 text-right"><span><!--End time--></span></div>
             </div>
-            <div id="map-wrapper">
-                <div id="map">
+            <div class="row-fluid">
+                <div class="span3">
+
+                    <script type="text/template" id="map-object-list-template">
+                        <div>
+                            <label><%- title %></label>
+                            <div class="form-inline">
+                                <label class="checkbox" >
+                                    <input type="checkbox" <%= showObject ? 'checked="checked"' : '' %> /> Object
+                                </label>
+                                <label class="checkbox" >
+                                    <input type="checkbox" <%= showRoute ? 'checked="checked"' : '' %> /> Route
+                                </label>
+                            </div>
+                        </div>
+                    </script>
+
+                    <ul id="map-objects-list"></ul>
+                    
+                </div>
+                <div class="span9" id="map-wrapper">
+                    <div id="map">
+                    </div>
                 </div>
             </div>
         </div>

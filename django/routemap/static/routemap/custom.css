@@ -10,7 +10,6 @@
     #routes-map-view #map-wrapper {
         background: white;
         height: 500px;
-        margin: 20px auto;
     }
 
     #routes-map-view input[type=range]:first-child {
@@ -37,6 +36,11 @@
         #routes-map-view label.radio input[type=radio] {
             margin-top: 0px;
         }
+
+    #routes-map-view #map-objects-list {
+        height: 500px;
+        overflow: auto;
+    }
 
 #map {
     height: 100%;
