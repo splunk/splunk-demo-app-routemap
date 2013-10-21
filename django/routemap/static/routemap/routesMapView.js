@@ -1,4 +1,7 @@
-define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Backbone, exports) {
+define(
+  'routesMapView', 
+  ['underscore', 'backbone', 'mapObjectsDictionary', 'exports', ], 
+  function(_, Backbone, MapObjectsDictionary, exports) {
 
   /*
   * Routes map view
@@ -152,7 +155,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     initialize: function() {
       // Initialize sub-models
-      this.collection = new MapObjectsDictionary;
+      this.collection = new MapObjectsDictionary();
       this.bounds = null;
       this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
 
@@ -287,93 +290,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
     }
   });
 
-  /*
-  * Class represents each individual object on map. It stores all points and knows how to travel between them on map.
-  */
-  var MapObject = Backbone.Model.extend({
-
-    defaults: function() {
-      return {
-        title: "unknown object",
-        points: [],
-        showObject: true,
-        showRoute: false
-      };
-    },
-
-    initialize: function() {
-      this.on('change:showObject', function() {
-        if (!this.get('showObject')) {
-          this.clearPos();
-        }
-      }.bind(this));
-
-      // Generate title
-      var title = '';
-      var fields = this.get('fields');
-      for (var field in fields) {
-        if (fields.hasOwnProperty(field)) {
-          if (title !== '') {
-            title += ', ';
-          }
-          title += field + ': ' + fields[field];
-        }
-      }
-
-      this.set('title', title);
-    },
-
-    add: function(point) {
-      this.get('points').unshift(point);
-      this.trigger('add-point', this, point);
-    },
-
-    /*
-    * Place object on map in current time.
-    */
-    calculatePos: function(currentTime) {
-      if (this.get('showObject')) {
-        // Trying to find point 
-        var points = this.get('points');
-
-        var nextPointIndex = -1;
-        while ((++nextPointIndex) < points.length) {
-          if (points[nextPointIndex].ts > currentTime) {
-            break;
-          }
-        }
-
-        if (nextPointIndex == 0 || nextPointIndex >= points.length) {
-          // Current object does not have points in this time
-          this.clearPos();
-        } else {
-          // Let's find position of current object and place it on map
-          var currentPoint = points[nextPointIndex - 1];
-          var nextPoint = points[nextPointIndex];
-          var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
-          var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
-          var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
-
-          this.set({pos: { lat: lat, lon: lon }});
-        }
-      }
-    },
-
-    /*
-    * Remove marker from map.
-    */
-    clearPos: function() {
-      this.unset({pos: null});
-    },
-
-    toggleShowRoute: function() {
-      this.set({showRoute: !this.get('showRoute')});
-    },
-
-    toggleShowObject: function() {
-      this.set({showObject: !this.get('showObject')});
-    }
-  });
+  
 
   var MapObjectListView = Backbone.View.extend({
     
@@ -410,49 +327,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
     }
   })
 
-  /*
-  * Collection stores all travel models.
-  */
-  var MapObjectsDictionary = Backbone.Model.extend({
-    initialize: function() {
-      this.models = {};
-    },
 
-    addData: function(fields, point) {
-      var hash = JSON.stringify(fields);
-
-      var model = null;
-
-      if (this.models.hasOwnProperty(hash)) {
-        model = this.models[hash];
-      } else {
-        model = new MapObject({ fields: fields });
-        this.models[hash] = model;
-        this.trigger('add', model);
-      }
-
-      model.add(point);
-
-      return model;
-    },
-
-    reset: function() {
-      this.each(function(model, modelHash) {
-        this.trigger('remove', model);
-        delete this.models[modelHash];
-      }.bind(this));
-    },
-
-    each: function(action) {
-      if (action) {
-        for (var modelHash in this.models) {
-          if (this.models.hasOwnProperty(modelHash)) {
-            action(this.models[modelHash], modelHash);
-          }
-        }
-      }
-    }
-  });
 
   // Require export (create new travel system)
   return exports.create = function() {
