@@ -1,7 +1,9 @@
 define(
-  'routesMapView', 
+  'mapObjectsView', 
   ['underscore', 'backbone', 'mapObjectsViewModel'], 
   function(_, Backbone, MapObjectsViewModel) {
+
+  'use strict'
 
   /*
   * Routes map view

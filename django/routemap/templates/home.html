@@ -79,94 +79,14 @@
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
     <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/mapObjectsDictionary.js"></script>
     <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/mapObjectsViewModel.js"></script>
-    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/routesMapView.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/mapObjectsView.js"></script>
+    <script type="text/javascript" src="{{STATIC_URL}}{{app_name}}/mapObjectsPageController.js"></script>
     <!-- https://github.com/hpneo/gmaps -->
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.5/gmaps.min.js"></script>
     <script>
-        var deps = [
-            'splunkjs/ready!',
-            'splunkjs/mvc/searchbarview',
-            'splunkjs/mvc/searchcontrolsview',
-            'splunkjs/mvc/tableview',
-            'splunkjs/mvc/searchmanager',
-            'underscore',
-            'routesMapView'
-        ];
-        require(deps, function(mvc) {
-            var SearchbarView = require('splunkjs/mvc/searchbarview');
-            var SearchControlsView = require('splunkjs/mvc/searchcontrolsview');
-            var TableView = require('splunkjs/mvc/tableview');
-            var SearchManager = require('splunkjs/mvc/searchmanager');
-            var _ = require('underscore');
-            var travelSystemModule = require('routesMapView');
-
-            // Initialize new search manager
-
-            var searchManager = new SearchManager({
-                id: 'appSearchManager',
-                app: 'routemap',
-                preview: true,
-                required_field_list: '*',
-                status_buckets: 300,
-                search: 'source=firebase | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
-            });
-
-            var searchPanel = $('#searchPanel');
-
-            // Instantiate the views and search manager
-            var searchbarView = new SearchbarView({
-                managerid: searchManager.id,
-                el: searchPanel.append('div')
-            }).render();
-
-            // Update the search manager when the query in the searchbar changes
-            searchbarView.on('change', function() {
-                searchManager.set('search', searchbarView.val());
-            });
-
-            // Update the search manager when the timerange in the searchbar changes
-            searchbarView.timerange.on('change', function() {
-                searchManager.search.set(searchbarView.timerange.val());
-            });
-
-            new SearchControlsView({
-                managerid: searchManager.id,
-                el: searchPanel.append('div')
-            }).render();
-
-            var travelSystem = new travelSystemModule();
-
-            // Connect to search
-            var routesData = searchManager.data('results', {count: 0, output_mode: 'json'});
-            routesData.on('data', function() {
-                console.log('got new data');
-
-                if (!routesData.hasData()) {
-                    return;
-                }
-
-                if (travelSystem) {
-                    travelSystem.viewModel.pause();
-                    travelSystem.viewModel.removeAllObjects();
-                } 
-
-                var bounds = new google.maps.LatLngBounds();
-                
-                var results = routesData.data().results;
-                for (var rIndex = 0; rIndex < results.length; rIndex++) {
-                    var result = results[rIndex];
-
-                    if (result.data) {
-                        var data = result.data.split(';');
-                        var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
-                        delete result['data'];
-                        travelSystem.viewModel.addData(result, point);
-                    }
-                }
-                
-                travelSystem.viewModel.autoZoom();
-                travelSystem.viewModel.play();
-            });
+        var pageController = null;
+        require(['mapObjectsPageController', 'splunkjs/ready!'], function(PageController) {
+           pageController = new PageController();
         });
     </script>
 {% endblock js %}
