@@ -53,16 +53,20 @@ define(
     this.mapObjectsView = new MapObjectsView();
 
     this.pageProgress = $('#routes-map-progress');
-    this.pageProgress.show();
+    this.pageProgress.hide();
+
+    this.searchManager.on('search:progress', function(arg1, arg2, arg3) {
+      this.pageProgress.toggle();
+    }.bind(this));
 
     // Connect to search
     var routesData = this.searchManager.data('results', {count: 0, output_mode: 'json'});
     routesData.on('data', function() {
-        console.log('got new data');
-
         if (!routesData.hasData()) {
             return;
         }
+
+        this.pageProgress.show();
 
         if (this.mapObjectsView) {
             this.mapObjectsView.viewModel.pause();

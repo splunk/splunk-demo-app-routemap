@@ -95,6 +95,10 @@ define(
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {
           this.objectsListView.append((new MapObjectListView({model: model})).render().el);
+        }.bind(this));
+
+        this.listenTo(this.viewModel.collection, 'reset', function() {
+          this.objectsListView.empty();
         }.bind(this))
     },
 

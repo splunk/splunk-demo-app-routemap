@@ -178,6 +178,7 @@ define(
   * Backbone custom events:
   * add - new MapObject has been added.
   * remove - object has been removed.
+  * reset - all elements are going to be removed.
   */
   var MapObjectsDictionary = Backbone.Model.extend({
 
@@ -226,6 +227,7 @@ define(
     * Remove all objects from dictionary.
     */
     reset: function() {
+      this.trigger('reset');
       this.each(function(model, id) {
         this.trigger('remove', model);
         delete this.models[id];
