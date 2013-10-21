@@ -26,20 +26,42 @@
         margin-right: 10px;
     }
 
-    #routes-map-view label.radio {
-        padding-top: 0px;
-        padding-bottom: 0px;
-        padding-right: 15px;
-        display: inline-block;
+    #routes-map-view #map-objects-header {
+        height: 70px;
     }
 
-        #routes-map-view label.radio input[type=radio] {
-            margin-top: 0px;
-        }
+    #routes-map-view #map-objects-header .checkbox input[type=checkbox] {
+        margin-top:7px;
+    }
 
     #routes-map-view #map-objects-list {
-        height: 500px;
+        height: 430px;
         overflow: auto;
+    }
+
+    #routes-map-view #map-objects-list .checkbox {
+        padding: 0;
+        line-height: normal;
+    }
+
+    #routes-map-view #map-objects-list .checkbox input[type=checkbox]{
+        margin: 0 5px 0 0;
+    }
+
+    #routes-map-view #map-objects-list li {
+        margin-top: 5px;
+    }
+
+    #routes-map-view #map-objects-list .form-inline {
+        margin-left: 5px;
+        margin-top: -5px;
+    }
+
+    #routes-map-view #map-objects-list small {
+        vertical-align: middle;
+        display: inline-block;
+        margin-right: 5px;
+        margin-top: -2px;
     }
 
 #map {
