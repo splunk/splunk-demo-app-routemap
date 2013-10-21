@@ -152,31 +152,20 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     initialize: function() {
       // Initialize sub-models
-      this.collection = new MapObjectsCollection;
+      this.collection = new MapObjectsDictionary;
       this.bounds = null;
       this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
 
       this.collection.on('add', function(model) {
-        var points = model.get('points');
-
-        _.each(points, function(point) { (this.bounds || (this.bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon)); }.bind(this))
-
-        if (points.length > 0){
-          var oStartTime = _.first(points).ts, 
-              oEndTime = _.last(points).ts;
-
-          if (oStartTime) {
-            this.set('beginTime', !this.has('beginTime') ? oStartTime : Math.min(oStartTime, this.get('beginTime')));
-          }
-
-          if (oEndTime) {
-            this.set('endTime', !this.has('endTime') ? oEndTime : Math.max(oEndTime, this.get('endTime')));
-          }
-        }
-
         var marker = null;
         var polyline = null;
-        model.on('change:pos', function(model, pos) {
+        model
+            .on('add-point', function(model, point) {
+              (this.bounds || (this.bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon));
+              this.set('beginTime', !this.has('beginTime') ? point.ts : Math.min(point.ts, this.get('beginTime')));
+              this.set('endTime', !this.has('endTime') ? point.ts : Math.max(point.ts, this.get('endTime')));
+            }.bind(this))
+            .on('change:pos', function(model, pos) {
               if (pos) {
                 if (marker) {
                   marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
@@ -195,7 +184,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
                 }
               }
             }.bind(this))
-          .on('change:showRoute', function(model, showRoute) {
+            .on('change:showRoute', function(model, showRoute) {
               if (showRoute) {
                 var path = _.map(model.get('points'), function(p) {
                   return [p.lat, p.lon];
@@ -214,7 +203,7 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
                 }
               }
             }.bind(this))
-          .on('change:showObject', function(model, showObject) {
+            .on('change:showObject', function(model, showObject) {
               if (showObject) {
                 model.calculatePos(this.get('currentTime'))
               }
@@ -243,21 +232,11 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
 
     /*
     * Add object on the map. 
-    * @param title - will be used as a tooltip for marker.
-    * @param points - array of points where each point is { ts: [float], lat: [float], lon: [float]}
+    * @param fields - set of unique fields for object.
+    * @param point - position of the object in time { ts: [float], lat: [float], lon: [float]}
     */
-    addObject: function(title, points) {
-      points = _.sortBy(points || [], function(o) { return o.ts; });
-
-      var travelObject = new MapObject({
-                                title: title, 
-                                points: points,
-                                visible: true
-                              });
-
-      this.collection.add([travelObject]);
-
-      return travelObject;
+    addData: function(fields, point) {
+      return this.collection.addData(fields, point);
     },
 
     /*
@@ -327,7 +306,26 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
         if (!this.get('showObject')) {
           this.clearPos();
         }
-      }.bind(this))
+      }.bind(this));
+
+      // Generate title
+      var title = '';
+      var fields = this.get('fields');
+      for (var field in fields) {
+        if (fields.hasOwnProperty(field)) {
+          if (title !== '') {
+            title += ', ';
+          }
+          title += field + ': ' + fields[field];
+        }
+      }
+
+      this.set('title', title);
+    },
+
+    add: function(point) {
+      this.get('points').unshift(point);
+      this.trigger('add-point', this, point);
     },
 
     /*
@@ -415,8 +413,45 @@ define('routesMapView', ['underscore', 'backbone', 'exports', ], function(_, Bac
   /*
   * Collection stores all travel models.
   */
-  var MapObjectsCollection = Backbone.Collection.extend({
-    model: MapObject
+  var MapObjectsDictionary = Backbone.Model.extend({
+    initialize: function() {
+      this.models = {};
+    },
+
+    addData: function(fields, point) {
+      var hash = JSON.stringify(fields);
+
+      var model = null;
+
+      if (this.models.hasOwnProperty(hash)) {
+        model = this.models[hash];
+      } else {
+        model = new MapObject({ fields: fields });
+        this.models[hash] = model;
+        this.trigger('add', model);
+      }
+
+      model.add(point);
+
+      return model;
+    },
+
+    reset: function() {
+      this.each(function(model, modelHash) {
+        this.trigger('remove', model);
+        delete this.models[modelHash];
+      }.bind(this));
+    },
+
+    each: function(action) {
+      if (action) {
+        for (var modelHash in this.models) {
+          if (this.models.hasOwnProperty(modelHash)) {
+            action(this.models[modelHash], modelHash);
+          }
+        }
+      }
+    }
   });
 
   // Require export (create new travel system)

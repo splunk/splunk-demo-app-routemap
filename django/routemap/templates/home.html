@@ -106,7 +106,7 @@
                 preview: true,
                 required_field_list: '*',
                 status_buckets: 300,
-                search: 'source=firebase | stats list(ts) as tsArray, list(lat) as latArray, list(lon) as lonArray by routeTag, id'
+                search: 'source=firebase | sort ts desc | eval data=ts+";"+lat+";"+lon | table data, routeTag, id'
             });
 
             var searchPanel = $('#searchPanel');
@@ -150,24 +150,15 @@
                 var bounds = new google.maps.LatLngBounds();
                 
                 var results = routesData.data().results;
-                for (var rIndex = 0; rIndex < Math.min(100, results.length); rIndex++) {
+                for (var rIndex = 0; rIndex < results.length; rIndex++) {
                     var result = results[rIndex];
 
-                    var points = [];
-                    var latValues = result['latArray'];
-                    var lonValues = result['lonArray'];
-                    var tsValues = result['tsArray'];
-
-                    for (var i = 0; i < Math.min(tsValues.length, Math.min(latValues.length, lonValues.length)); i++) {
-                        if (latValues[i] && lonValues[i] && tsValues[i]) {
-                            var ts = parseFloat(tsValues[i]),
-                                lat = parseFloat(latValues[i]),
-                                lon = parseFloat(lonValues[i]);
-                            points.push({ ts: ts, lat: lat, lon: lon });
-                        }
+                    if (result.data) {
+                        var data = result.data.split(';');
+                        var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
+                        delete result['data'];
+                        travelSystem.viewModel.addData(result, point);
                     }
-
-                    travelSystem.viewModel.addObject('Route: ' + result.routeTag + ', bus: ' + result.id, points);
                 }
                 
                 travelSystem.viewModel.autoZoom();
