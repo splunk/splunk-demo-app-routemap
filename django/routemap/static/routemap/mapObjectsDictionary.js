@@ -1,9 +1,9 @@
-'use strict'
-
 define(
   'mapObjectsDictionary', 
   ['underscore', 'backbone'], 
   function(_, Backbone) {
+
+  'use strict'
 
   // By default we set `showObject` to first 100 objects on map.
   var maxVisibleObjects = 100;
@@ -61,7 +61,7 @@ define(
 
       // When we hide object we trigger event that we removed current position
       this.on('change:showObject', function() {
-        if (!this.get('showObject')) {
+        if (!this.showObject()) {
           this.clearPos();
         }
       }.bind(this));
@@ -81,7 +81,7 @@ define(
         || !_.isNumber(point.lon)) {
         throw 'Argument exception. Invalid point format';
       }
-      this.get('points').unshift(point);
+      this.getPoints().unshift(point);
       this.trigger('add-point', this, point);
     },
 
@@ -92,9 +92,9 @@ define(
     * Current method calculates position and set it as backbone model field `pos`.
     */
     calculatePos: function(currentTime) {
-      if (this.get('showObject')) {
+      if (this.showObject()) {
         // Trying to find point 
-        var points = this.get('points');
+        var points = this.getPoints();
 
         var nextPointIndex = -1;
         while ((++nextPointIndex) < points.length) {
@@ -132,14 +132,43 @@ define(
     * Toggle current state of show route (field `showRoute`).
     */
     toggleShowRoute: function() {
-      this.set({showRoute: !this.get('showRoute')});
+      this.showRoute(!this.showRoute());
     },
 
     /*
     * Toggle current state of show object (field `showObject`).
     */
     toggleShowObject: function() {
-      this.set({showObject: !this.get('showObject')});
+      this.showObject(!this.showObject());
+    },
+
+    /*
+    * Gets or sets the show object value.
+    * @param value - if not undefined - set value to showObject.
+    */ 
+    showObject: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set({'showObject': value});
+      }
+      return this.get('showObject');
+    },
+
+    /*
+    * Gets or sets the show object value.
+    * @param value - if not undefined - set value to showRoute.
+    */ 
+    showRoute: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set({'showRoute': value});
+      }
+      return this.get('showRoute');
+    },
+
+    /*
+    * Gets points array.
+    */
+    getPoints: function() {
+      return this.get('points');
     }
   });
 

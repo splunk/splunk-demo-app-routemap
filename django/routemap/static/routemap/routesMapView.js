@@ -1,7 +1,7 @@
 define(
   'routesMapView', 
-  ['underscore', 'backbone', 'mapObjectsDictionary', 'exports', ], 
-  function(_, Backbone, MapObjectsDictionary, exports) {
+  ['underscore', 'backbone', 'mapObjectsViewModel'], 
+  function(_, Backbone, MapObjectsViewModel) {
 
   /*
   * Routes map view
@@ -22,7 +22,7 @@ define(
     },
 
     initialize: function() {
-      this.viewModel = new RoutesMapViewModel;
+      this.viewModel = new MapObjectsViewModel;
 
       this.buttonPlay = this.$('#button-play');
       this.buttonPause = this.$('#button-pause');
@@ -144,154 +144,6 @@ define(
     }
   });
 
-  /*
-  * View-Model
-  */
-  var RoutesMapViewModel = Backbone.Model.extend({
-    defaults: {
-      graduality: 20,
-      speed: 150
-    },
-
-    initialize: function() {
-      // Initialize sub-models
-      this.collection = new MapObjectsDictionary();
-      this.bounds = null;
-      this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
-
-      this.collection.on('add', function(model) {
-        var marker = null;
-        var polyline = null;
-        model
-            .on('add-point', function(model, point) {
-              (this.bounds || (this.bounds = new google.maps.LatLngBounds())).extend(new google.maps.LatLng(point.lat, point.lon));
-              this.set('beginTime', !this.has('beginTime') ? point.ts : Math.min(point.ts, this.get('beginTime')));
-              this.set('endTime', !this.has('endTime') ? point.ts : Math.max(point.ts, this.get('endTime')));
-            }.bind(this))
-            .on('change:pos', function(model, pos) {
-              if (pos) {
-                if (marker) {
-                  marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
-                } else {
-                  marker = this.map.addMarker({
-                      lat: pos.lat,
-                      lng: pos.lon,
-                      title: model.get('title'),
-                      zIndex: 1
-                  });
-                }
-              } else {
-                if (marker) {
-                  marker.setMap(null);
-                  marker = null;
-                }
-              }
-            }.bind(this))
-            .on('change:showRoute', function(model, showRoute) {
-              if (showRoute) {
-                var path = _.map(model.get('points'), function(p) {
-                  return [p.lat, p.lon];
-                });
-
-                polyline = this.map.drawPolyline({
-                  path: path,
-                  strokeColor: '#131540',
-                  strokeOpacity: 0.6,
-                  strokeWeight: 6
-                });
-              } else {
-                if (polyline) {
-                  polyline.setMap(null);
-                  polyline = null;
-                }
-              }
-            }.bind(this))
-            .on('change:showObject', function(model, showObject) {
-              if (showObject) {
-                model.calculatePos(this.get('currentTime'))
-              }
-            }.bind(this))
-      }.bind(this));
-
-      this.collection.on('remove', function(model) {
-        model.clearPos();
-      });
-    },
-
-    setCurrentTime: function(time) {
-      this.set('currentTime', time);
-      this.collection.each(function(obj) {
-        obj.calculatePos(time);
-      }.bind(this));
-    },
-
-    setBeginTime: function(time) {
-      this.set('beginTime', time);
-    },
-
-    setEndTime: function(time) {
-      this.set('endTime', time);
-    },
-
-    /*
-    * Add object on the map. 
-    * @param fields - set of unique fields for object.
-    * @param point - position of the object in time { ts: [float], lat: [float], lon: [float]}
-    */
-    addData: function(fields, point) {
-      return this.collection.addData(fields, point);
-    },
-
-    /*
-    * Remove all tracking objects.
-    */ 
-    removeAllObjects: function() {
-      this.pause();
-      this.collection.each(function(obj) { obj.clearPos(); })
-      this.collection.reset();
-      this.unset({currentTime: null, beginTime: null, endTime: null});
-    },
-
-    /*
-    * Start travel system
-    */
-    play: function() {
-      if (!this.has('beginTime') || !this.has('endTime') || this.has('playInterval')) {
-        // No objects or already in play mode
-        return; 
-      }
-
-      if (!this.has('currentTime')) {
-        this.setCurrentTime(this.get('beginTime'));
-      }
-
-      this.set('playInterval', setInterval(function() {
-          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
-          if (this.get('currentTime') > this.get('endTime')) {
-            this.pause();
-          } 
-        }.bind(this), (1000 / this.get('graduality'))));
-    }, 
-
-    /*
-    * Pause system.
-    */
-    pause: function() {
-      if (this.has('playInterval')) {
-        clearInterval(this.get('playInterval'));
-        this.unset('playInterval');
-      }
-    },
-
-    autoZoom: function() {
-      if (this.bounds) {
-        this.map.fitBounds(this.bounds);
-      }
-    }
-  });
-
-  
-
   var MapObjectListView = Backbone.View.extend({
     
     tagName: 'li',
@@ -327,11 +179,7 @@ define(
     }
   })
 
-
-
   // Require export (create new travel system)
-  return exports.create = function() {
-    return new RoutesMapView();
-  };
+  return RoutesMapView;
 });
 
