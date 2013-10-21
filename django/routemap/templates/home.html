@@ -108,7 +108,7 @@
                 preview: true,
                 required_field_list: '*',
                 status_buckets: 300,
-                search: 'source=firebase | sort ts desc | eval data=ts+";"+lat+";"+lon | table data, routeTag, id'
+                search: 'source=firebase | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
             });
 
             var searchPanel = $('#searchPanel');
