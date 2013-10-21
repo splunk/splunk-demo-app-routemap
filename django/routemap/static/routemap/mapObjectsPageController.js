@@ -52,6 +52,9 @@ define(
 
     this.mapObjectsView = new MapObjectsView();
 
+    this.pageProgress = $('#routes-map-progress');
+    this.pageProgress.show();
+
     // Connect to search
     var routesData = this.searchManager.data('results', {count: 0, output_mode: 'json'});
     routesData.on('data', function() {
@@ -80,6 +83,7 @@ define(
         
         this.mapObjectsView.viewModel.autoZoom();
         this.mapObjectsView.viewModel.play();
+        this.pageProgress.hide();
     }.bind(this));
   };
 
