@@ -73,6 +73,22 @@ define(
     },
 
     /*
+    * Add objects on the map. 
+    * @param data - array of { obj: [obj fields], point: { ts: [float], lat: [float], lon: [float]}}.
+    */
+    addDataPoints: function(data) {
+      var beginTime = this.has('beginTime') ? this.get('beginTime') : null;
+      var endTime = this.has('endTime') ? this.get('endTime') : null;
+      _.each(data, function(p) {
+        beginTime = Math.min(p.point.ts, beginTime || p.point.ts);
+        endTime = Math.max(p.point.ts, endTime || p.point.ts);
+        this.collection.addData(p.obj, p.point);
+      }.bind(this));
+      if (beginTime) this.set('beginTime', beginTime);
+      if (endTime) this.set('endTime', endTime);
+    },
+
+    /*
     * Add object on the map. 
     * @param obj - object located on this point.
     * @param point - position of the object in time { ts: [float], lat: [float], lon: [float]}
@@ -95,6 +111,8 @@ define(
 
     /*
     * Start playback of all objects on map.
+    *
+    * In case of realtime we just move all system to latest known point in time.
     */
     play: function() {
       if (!this.has('beginTime') || !this.has('endTime') || this.has('playInterval')) {
@@ -106,12 +124,14 @@ define(
         this.setCurrentTime(this.get('beginTime'));
       }
 
-      this.set('playInterval', setInterval(function() {
-          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
-          if (this.get('currentTime') > this.get('endTime')) {
-            this.pause();
-          } 
-        }.bind(this), (1000 / this.get('graduality'))));
+      if (!this.realtime()) {
+        this.set('playInterval', setInterval(function() {
+            this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
+            if (this.get('currentTime') > this.get('endTime')) {
+              this.pause();
+            } 
+          }.bind(this), (1000 / this.get('graduality'))));
+      }
     }, 
 
     /*
@@ -147,6 +167,9 @@ define(
     */
     realtime: function(value) {
       if (!_.isUndefined(value)) {
+        if (value) {
+          this.pause();
+        }
         this.set('realtime', value);
       }
 

@@ -78,17 +78,22 @@ define(
     routesData.on('data', function() {
       if (routesData.hasData()) {
         var results = routesData.data().results;
+        var dataPoints = [];
+
         for (var rIndex = 0; rIndex < results.length; rIndex++) {
           var result = results[rIndex];
-
+          
           if (result.data) {
             var data = result.data.split(';');
             var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
             delete result['data'];
-            this.mapObjectsView.viewModel.addData(result, point);
+            dataPoints.push({obj: result, point: point});
           }
         }
+
+        this.mapObjectsView.viewModel.addDataPoints(dataPoints);
         
+        // TODO: in realtime we need to think how to handle auto zoom
         this.mapObjectsView.viewModel.autoZoom();
         this.mapObjectsView.viewModel.play();
       }
