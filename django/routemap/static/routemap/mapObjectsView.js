@@ -44,9 +44,9 @@ define(
       this.viewModel
         .on('change:currentTime', function() {
           this.labelCurrentTime.text(
-            this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
+            this.viewModel.has('currentTime') ? (new Date(this.viewModel.currentTime() * 1000)).toLocaleString() : '');
           this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
-          this.inputTime.val(this.viewModel.get('currentTime'));
+          this.inputTime.val(this.viewModel.currentTime());
         }.bind(this))
         .on('change:beginTime', function() {
           if (this.viewModel.has('beginTime')) {
@@ -128,7 +128,7 @@ define(
 
     userChangeTime: function() {
       this.viewModel.pause();
-      this.viewModel.setCurrentTime(parseFloat(this.inputTime.val()));
+      this.viewModel.currentTime(parseFloat(this.inputTime.val()));
     },
 
     userPlay: function() {

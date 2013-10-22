@@ -6,7 +6,7 @@ define(
   'use strict'
 
   // How many seconds we show object on map after we think it disappears.
-  var defaultObjectTimeout = 60;
+  var defaultObjectTimeout = 300;
 
   /*
   * Generate title string from object's fields. 
@@ -82,6 +82,9 @@ define(
         throw 'Argument exception. Invalid point format';
       }
       this.getPoints().unshift(point);
+      if (this.showRoute() && this.polyline) {
+        this.polyline.getPath().push(new google.maps.LatLng(point.lat, point.lon));
+      }
     },
 
     /*
@@ -100,7 +103,7 @@ define(
         var lat, lon;
 
         if (realtime) {
-          var lastPoint = _.last(points);
+          var lastPoint = _.first(points);
           if (lastPoint && Math.abs(currentTime - lastPoint.ts, 0) <= defaultObjectTimeout) {
             lat = lastPoint.lat;
             lon = lastPoint.lon;

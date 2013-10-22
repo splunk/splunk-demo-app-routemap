@@ -18,6 +18,8 @@ define(
 
   var PageController = function() {
 
+    var defaultTimerange = { earliest_time:"-60m@m", latest_time:"now" };
+
     this.mapObjectsView = new MapObjectsView();
 
     this.searchManager = new SearchManager({
@@ -26,6 +28,8 @@ define(
       preview: true,
       required_field_list: '*',
       status_buckets: 300,
+      earliest_time: defaultTimerange.earliest_time,
+      latest_time: defaultTimerange.latest_time,
       search: 'source=firebase | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
     });
 
@@ -34,7 +38,9 @@ define(
     // Instantiate the views and search manager
     this.searchBarView = new SearchBarView({
       managerid: this.searchManager.id,
-      el: this.searchPanel.append('div')
+      el: this.searchPanel.append('div'),
+      earliest_time: defaultTimerange.earliest_time,
+      latest_time: defaultTimerange.latest_time,
     }).render();
 
     // Update the search manager when the query in the searchbar changes
@@ -73,29 +79,45 @@ define(
       // TODO: Show error to user
     }.bind(this));
 
-    // Connect to search
-    var routesData = this.searchManager.data('results', {count: 0, output_mode: 'json'});
-    routesData.on('data', function() {
-      if (routesData.hasData()) {
-        var results = routesData.data().results;
-        var dataPoints = [];
+    var dataHandler = function(results) {
+      var dataPoints = [];
 
-        for (var rIndex = 0; rIndex < results.length; rIndex++) {
-          var result = results[rIndex];
-          
-          if (result.data) {
-            var data = result.data.split(';');
-            var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
-            delete result['data'];
-            dataPoints.push({obj: result, point: point});
-          }
-        }
+      var hasData = this.mapObjectsView.viewModel.has('currentTime');
 
-        this.mapObjectsView.viewModel.addDataPoints(dataPoints);
+      for (var rIndex = 0; rIndex < results.length; rIndex++) {
+        var result = results[rIndex];
         
-        // TODO: in realtime we need to think how to handle auto zoom
+        if (result.data) {
+          var data = result.data.split(';');
+          var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
+          delete result['data'];
+          dataPoints.push({obj: result, point: point});
+        }
+      }
+
+      this.mapObjectsView.viewModel.addDataPoints(dataPoints);
+      
+      if (!hasData) {
         this.mapObjectsView.viewModel.autoZoom();
-        this.mapObjectsView.viewModel.play();
+      }
+      this.mapObjectsView.viewModel.play();
+    }.bind(this);
+
+    // Connect to search
+
+    // When we are in real-time we get only events on preview
+    var previewData = this.searchManager.data("preview", {count: 0, output_mode: 'json'});
+    previewData.on('data', function() {
+      if (previewData.hasData() && this.mapObjectsView.viewModel.realtime()) {
+        dataHandler(previewData.data().results);
+      }
+    }.bind(this));
+
+    // When we are not in real-time we get events on results
+    var resultsData = this.searchManager.data('results', {count: 0, output_mode: 'json'});
+    resultsData.on('data', function() {
+      if (resultsData.hasData() && !this.mapObjectsView.viewModel.realtime()) {
+        dataHandler(resultsData.data().results);
       }
     }.bind(this));
   };

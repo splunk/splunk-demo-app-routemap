@@ -32,7 +32,7 @@ define(
             'change:showObject', 
             function(model, showObject) {
               if (showObject) {
-                model.calculatePos(this.get('currentTime'), this.realtime())
+                model.calculatePos(this.currentTime(), this.realtime())
               }
             }.bind(this));
         }.bind(this))
@@ -47,13 +47,17 @@ define(
     * Method update each object on map and ask them to recalculate their
     * positions.
     */ 
-    setCurrentTime: function(time) {
-      this.set('currentTime', time);
-      this.collection.each(function(obj) {
-        if (obj.showObject()) {
-          obj.calculatePos(time, this.realtime());
-        }
-      }.bind(this));
+    currentTime: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('currentTime', value);
+        this.collection.each(function(obj) {
+          if (obj.showObject()) {
+            obj.calculatePos(value, this.realtime());
+          }
+        }.bind(this));
+      }
+      
+      return this.get('currentTime');
     },
 
     /*
@@ -79,10 +83,14 @@ define(
     addDataPoints: function(data) {
       var beginTime = this.has('beginTime') ? this.get('beginTime') : null;
       var endTime = this.has('endTime') ? this.get('endTime') : null;
+      var currentTime = this.currentTime();
+      var realtime = this.realtime();
       _.each(data, function(p) {
-        beginTime = Math.min(p.point.ts, beginTime || p.point.ts);
-        endTime = Math.max(p.point.ts, endTime || p.point.ts);
-        this.collection.addData(p.obj, p.point);
+        if (!realtime || !currentTime || currentTime < p.point.ts) {
+          beginTime = Math.min(p.point.ts, beginTime || p.point.ts);
+          endTime = Math.max(p.point.ts, endTime || p.point.ts);
+          this.collection.addData(p.obj, p.point);
+        }
       }.bind(this));
       if (beginTime) this.set('beginTime', beginTime);
       if (endTime) this.set('endTime', endTime);
@@ -121,15 +129,15 @@ define(
       }
 
       if (this.realtime()) {
-        this.setCurrentTime(this.get('endTime'));
+        this.currentTime(this.get('endTime'));
       } else {
         if (!this.has('currentTime')) {
-          this.setCurrentTime(this.get('beginTime'));
+          this.currentTime(this.get('beginTime'));
         }
 
         this.set('playInterval', setInterval(function() {
-          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
-          if (this.get('currentTime') > this.get('endTime')) {
+          this.currentTime(this.currentTime() + (this.get('speed') / this.get('graduality')));
+          if (this.currentTime() > this.get('endTime')) {
             this.pause();
           } 
         }.bind(this), (1000 / this.get('graduality'))));
