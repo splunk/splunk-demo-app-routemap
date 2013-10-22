@@ -35,9 +35,6 @@ define(
   /*
   * Class represents each individual object on map. 
   * It stores all points and knows how to travel between them on map.
-  *
-  * Backbone custom events:
-  * add-point - new point has been added.
   */
   var MapObject = Backbone.Model.extend({
 
@@ -67,6 +64,9 @@ define(
       }.bind(this));
 
       this.set('title', this.get('title') || generateTitle(this.get('obj')) || 'unknown');
+      this.map = this.get('map');
+      this.marker = null;
+      this.polyline = null;
     },
 
     /*
@@ -82,7 +82,6 @@ define(
         throw 'Argument exception. Invalid point format';
       }
       this.getPoints().unshift(point);
-      this.trigger('add-point', this, point);
     },
 
     /*
@@ -114,7 +113,16 @@ define(
           var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
           var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
 
-          this.set({pos: { lat: lat, lon: lon }});
+          if (this.marker) {
+            this.marker.setPosition(new google.maps.LatLng(lat, lon));
+          } else {
+            this.marker = this.map.addMarker({
+                lat: lat,
+                lng: lon,
+                title: this.get('title'),
+                zIndex: 1
+            });
+          }
         }
       }
     },
@@ -125,7 +133,10 @@ define(
     * Method invoke `unset` for field `pos`.
     */
     clearPos: function() {
-      this.unset({pos: null});
+      if (this.marker) {
+        this.marker.setMap(null);
+        this.marker = null;
+      }
     },
 
     /*
@@ -133,6 +144,24 @@ define(
     */
     toggleShowRoute: function() {
       this.showRoute(!this.showRoute());
+
+      if (this.showRoute()) {
+        var path = _.map(this.getPoints(), function(p) {
+          return [p.lat, p.lon];
+        });
+
+        this.polyline = this.map.drawPolyline({
+          path: path,
+          strokeColor: '#131540',
+          strokeOpacity: 0.6,
+          strokeWeight: 6
+        });
+      } else {
+        if (this.polyline) {
+          this.polyline.setMap(null);
+          this.polyline = null;
+        }
+      }
     },
 
     /*
@@ -174,6 +203,8 @@ define(
 
   /*
   * Dictionary stores all travel models.
+  *
+  * To initialize this dictionary you need to set { map: [Gmaps object] };
   * 
   * Backbone custom events:
   * add - new MapObject has been added.
@@ -187,6 +218,8 @@ define(
     */
     initialize: function() {
       this.models = {};
+      this.map = this.get('map');
+      if (!this.map) throw 'Map object should be set to initialize dictionary';
     },
 
     /*
@@ -208,12 +241,10 @@ define(
       if (this.models.hasOwnProperty(id)) {
         model = this.models[id];
       } else {
-        // By default show only first 100 objects.
-        var fields = { 
+        model = new MapObject({ 
                         obj: obj, 
-                        showObject: (_.size(this.models) <= maxVisibleObjects) 
-                     }; 
-        model = new MapObject(fields);
+                        map: this.map
+                     });
         this.models[id] = model;
         this.trigger('add', model);
       }

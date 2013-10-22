@@ -23,65 +23,22 @@ define(
     */ 
     initialize: function() {
       // Initialize sub-models
-      this.collection = new MapObjectsDictionary();
       this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
+      this.collection = new MapObjectsDictionary({ map: this.map });
 
-      this.collection.on('add', function(model) {
-        var marker = null;
-        var polyline = null;
-        model
-            .on('add-point', function(model, point) {
-              this.set('beginTime', !this.has('beginTime') ? point.ts : Math.min(point.ts, this.get('beginTime')));
-              this.set('endTime', !this.has('endTime') ? point.ts : Math.max(point.ts, this.get('endTime')));
-            }.bind(this))
-            .on('change:pos', function(model, pos) {
-              if (pos) {
-                if (marker) {
-                  marker.setPosition(new google.maps.LatLng(pos.lat, pos.lon));
-                } else {
-                  marker = this.map.addMarker({
-                      lat: pos.lat,
-                      lng: pos.lon,
-                      title: model.get('title'),
-                      zIndex: 1
-                  });
-                }
-              } else {
-                if (marker) {
-                  marker.setMap(null);
-                  marker = null;
-                }
-              }
-            }.bind(this))
-            .on('change:showRoute', function(model, showRoute) {
-              if (showRoute) {
-                var path = _.map(model.getPoints(), function(p) {
-                  return [p.lat, p.lon];
-                });
-
-                polyline = this.map.drawPolyline({
-                  path: path,
-                  strokeColor: '#131540',
-                  strokeOpacity: 0.6,
-                  strokeWeight: 6
-                });
-              } else {
-                if (polyline) {
-                  polyline.setMap(null);
-                  polyline = null;
-                }
-              }
-            }.bind(this))
-            .on('change:showObject', function(model, showObject) {
+      this.collection
+        .on('add', function(model) {
+          model.on(
+            'change:showObject', 
+            function(model, showObject) {
               if (showObject) {
                 model.calculatePos(this.get('currentTime'))
               }
-            }.bind(this))
-      }.bind(this));
-
-      this.collection.on('remove', function(model) {
-        model.clearPos();
-      });
+            }.bind(this));
+        }.bind(this))
+        .on('remove', function(model) {
+          model.clearPos();
+        });
     },
 
     /*
@@ -117,11 +74,13 @@ define(
 
     /*
     * Add object on the map. 
-    * @param fields - set of unique fields for object.
+    * @param obj - object located on this point.
     * @param point - position of the object in time { ts: [float], lat: [float], lon: [float]}
     */
-    addData: function(fields, point) {
-      return this.collection.addData(fields, point);
+    addData: function(obj, point) {
+      this.set('beginTime', !this.has('beginTime') ? point.ts : Math.min(point.ts, this.get('beginTime')));
+      this.set('endTime', !this.has('endTime') ? point.ts : Math.max(point.ts, this.get('endTime')));
+      return this.collection.addData(obj, point);
     },
 
     /*
