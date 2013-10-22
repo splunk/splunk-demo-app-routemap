@@ -144,7 +144,7 @@ define(
     userToggleAllRoutes: function() {
       var value = this.checkboxAllRoutes.prop('checked');
       this.viewModel.collection.each(function(model) {
-        model.set('showRoute', value);
+        model.showRoute(value);
       });
     },
 
@@ -152,7 +152,7 @@ define(
       this.viewModel.pause();
       var value = this.checkboxAllObjects.prop('checked');
       this.viewModel.collection.each(function(model) {
-        model.set('showObject', value);
+        model.showObject(value);
       });
     }
   });

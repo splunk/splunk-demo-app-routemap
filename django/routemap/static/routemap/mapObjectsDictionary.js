@@ -124,6 +124,8 @@ define(
             });
           }
         }
+      } else {
+        this.clearPos();
       }
     },
 
@@ -144,24 +146,6 @@ define(
     */
     toggleShowRoute: function() {
       this.showRoute(!this.showRoute());
-
-      if (this.showRoute()) {
-        var path = _.map(this.getPoints(), function(p) {
-          return [p.lat, p.lon];
-        });
-
-        this.polyline = this.map.drawPolyline({
-          path: path,
-          strokeColor: '#131540',
-          strokeOpacity: 0.6,
-          strokeWeight: 6
-        });
-      } else {
-        if (this.polyline) {
-          this.polyline.setMap(null);
-          this.polyline = null;
-        }
-      }
     },
 
     /*
@@ -178,6 +162,10 @@ define(
     showObject: function(value) {
       if (!_.isUndefined(value)) {
         this.set({'showObject': value});
+
+        if (!value) {
+          this.clearPos();
+        }
       }
       return this.get('showObject');
     },
@@ -189,6 +177,24 @@ define(
     showRoute: function(value) {
       if (!_.isUndefined(value)) {
         this.set({'showRoute': value});
+
+        if (value) {
+          var path = _.map(this.getPoints(), function(p) {
+            return [p.lat, p.lon];
+          });
+
+          this.polyline = this.map.drawPolyline({
+            path: path,
+            strokeColor: '#131540',
+            strokeOpacity: 0.6,
+            strokeWeight: 6
+          });
+        } else {
+          if (this.polyline) {
+            this.polyline.setMap(null);
+            this.polyline = null;
+          }
+        }
       }
       return this.get('showRoute');
     },
