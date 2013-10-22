@@ -5,8 +5,8 @@ define(
 
   'use strict'
 
-  // By default we set `showObject` to first 100 objects on map.
-  var maxVisibleObjects = 100;
+  // How many seconds we show object on map after we think it disappears.
+  var defaultObjectTimeout = 60;
 
   /*
   * Generate title string from object's fields. 
@@ -87,32 +87,43 @@ define(
     /*
     * Place object on map in current time.
     * @param currentTime - timestamp for which we want to calculate position.
+    * @param realtime - in case of realtime object always show latest known position
+    *                   for time specified by default value.
     *
     * Current method calculates position and set it as backbone model field `pos`.
     */
-    calculatePos: function(currentTime) {
+    calculatePos: function(currentTime, realtime) {
       if (this.showObject()) {
         // Trying to find point 
         var points = this.getPoints();
 
-        var nextPointIndex = -1;
-        while ((++nextPointIndex) < points.length) {
-          if (points[nextPointIndex].ts > currentTime) {
-            break;
+        var lat, lon;
+
+        if (realtime) {
+          var lastPoint = _.last(points);
+          if (lastPoint && Math.abs(currentTime - lastPoint.ts, 0) <= defaultObjectTimeout) {
+            lat = lastPoint.lat;
+            lon = lastPoint.lon;
+          }
+        } else {
+          var nextPointIndex = -1;
+          while ((++nextPointIndex) < points.length) {
+            if (points[nextPointIndex].ts > currentTime) {
+              break;
+            }
+          }
+
+          if (nextPointIndex !== 0 && nextPointIndex < points.length) {
+            // Let's find position of current object and place it on map
+            var currentPoint = points[nextPointIndex - 1];
+            var nextPoint = points[nextPointIndex];
+            var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
+            lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
+            lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
           }
         }
 
-        if (nextPointIndex == 0 || nextPointIndex >= points.length) {
-          // Current object does not have points in this time
-          this.clearPos();
-        } else {
-          // Let's find position of current object and place it on map
-          var currentPoint = points[nextPointIndex - 1];
-          var nextPoint = points[nextPointIndex];
-          var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
-          var lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
-          var lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
-
+        if (lat && lon) {
           if (this.marker) {
             this.marker.setPosition(new google.maps.LatLng(lat, lon));
           } else {
@@ -123,6 +134,9 @@ define(
                 zIndex: 1
             });
           }
+        } else {
+          // Current object does not have points in this time
+          this.clearPos();
         }
       } else {
         this.clearPos();

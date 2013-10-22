@@ -32,7 +32,7 @@ define(
             'change:showObject', 
             function(model, showObject) {
               if (showObject) {
-                model.calculatePos(this.get('currentTime'))
+                model.calculatePos(this.get('currentTime'), this.realtime())
               }
             }.bind(this));
         }.bind(this))
@@ -51,7 +51,7 @@ define(
       this.set('currentTime', time);
       this.collection.each(function(obj) {
         if (obj.showObject()) {
-          obj.calculatePos(time);
+          obj.calculatePos(time, this.realtime());
         }
       }.bind(this));
     },
@@ -120,17 +120,19 @@ define(
         return; 
       }
 
-      if (!this.has('currentTime')) {
-        this.setCurrentTime(this.get('beginTime'));
-      }
+      if (this.realtime()) {
+        this.setCurrentTime(this.get('endTime'));
+      } else {
+        if (!this.has('currentTime')) {
+          this.setCurrentTime(this.get('beginTime'));
+        }
 
-      if (!this.realtime()) {
         this.set('playInterval', setInterval(function() {
-            this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
-            if (this.get('currentTime') > this.get('endTime')) {
-              this.pause();
-            } 
-          }.bind(this), (1000 / this.get('graduality'))));
+          this.setCurrentTime(this.get('currentTime') + (this.get('speed') / this.get('graduality')));
+          if (this.get('currentTime') > this.get('endTime')) {
+            this.pause();
+          } 
+        }.bind(this), (1000 / this.get('graduality'))));
       }
     }, 
 

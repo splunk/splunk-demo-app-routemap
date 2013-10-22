@@ -33,7 +33,7 @@ define(
       this.spanGradualityValue = this.$('#span-graduality-value');
       this.inputGradualityValue = this.$('#input-graduality-value');
       this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
-      this.labelCurrentTime = this.$('#bar-time-ranges div:nth-child(2) > span');
+      this.labelCurrentTime = this.$('span[name=routes-currenttime]');
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
       this.inputTime = this.$('#input-time');
       this.objectsListView = this.$('#map-objects-list');
@@ -94,11 +94,13 @@ define(
         .on('change:realtime', function(viewModel, realtime) {
           if (realtime) {
             this.$('#routes-playback-toolbar').hide();
+            this.$('#routes-realtime-toolbar').show();
           } else {
             this.$('#routes-playback-toolbar').show();
+            this.$('#routes-realtime-toolbar').hide();
           }
         }.bind(this))
-        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval');
+        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval change:realtime');
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {
           this.objectsListView.append((new MapObjectListView({model: model})).render().el);
