@@ -181,6 +181,17 @@ define(
       });
 
       this.map.fitBounds(bounds);
+    },
+
+    /*
+    * Gets or sets if current view is in realtime.
+    */
+    realtime: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('realtime', value);
+      }
+
+      return this.get('realtime');
     }
   });
 
