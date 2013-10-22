@@ -43,54 +43,61 @@ define(
       // Connect view to view-model
       this.viewModel
         .on('change:currentTime', function() {
-            this.labelCurrentTime.text(
-              this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
-            this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
-            this.inputTime.val(this.viewModel.get('currentTime'));
-          }.bind(this))
+          this.labelCurrentTime.text(
+            this.viewModel.has('currentTime') ? (new Date(this.viewModel.get('currentTime') * 1000)).toLocaleString() : '');
+          this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
+          this.inputTime.val(this.viewModel.get('currentTime'));
+        }.bind(this))
         .on('change:beginTime', function() {
-            if (this.viewModel.has('beginTime')) {
-              this.inputTime.prop('min', this.viewModel.get('beginTime'));
-              this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
-            } else {
-              this.labelBeginTime.text('');
-            }
-          }.bind(this))
+          if (this.viewModel.has('beginTime')) {
+            this.inputTime.prop('min', this.viewModel.get('beginTime'));
+            this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
+          } else {
+            this.labelBeginTime.text('');
+          }
+        }.bind(this))
         .on('change:endTime', function() {
-            if (this.viewModel.has('endTime')) {
-              this.inputTime.prop('max', this.viewModel.get('endTime'));
-              this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
-            } else {
-              this.labelEndTime.text('');
-            }
-          }.bind(this))
+          if (this.viewModel.has('endTime')) {
+            this.inputTime.prop('max', this.viewModel.get('endTime'));
+            this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
+          } else {
+            this.labelEndTime.text('');
+          }
+        }.bind(this))
         .on('change:speed', function() {
-            if (this.viewModel.has('speed')) {
-              var currentSpeed = this.viewModel.get('speed');
-              this.spanSpeedValue.text(currentSpeed);
-              this.inputSpeedValue.val(currentSpeed);
-              this.inputSpeedValue.prop('disabled', false);
-            } else {
-              this.spanSpeedValue.text('');
-              this.inputSpeedValue.prop('disabled', true);
-            }
-          }.bind(this))
+          if (this.viewModel.has('speed')) {
+            var currentSpeed = this.viewModel.get('speed');
+            this.spanSpeedValue.text(currentSpeed);
+            this.inputSpeedValue.val(currentSpeed);
+            this.inputSpeedValue.prop('disabled', false);
+          } else {
+            this.spanSpeedValue.text('');
+            this.inputSpeedValue.prop('disabled', true);
+          }
+        }.bind(this))
         .on('change:graduality', function() {
-            if (this.viewModel.has('graduality')) {
-              var currentGraduality = this.viewModel.get('graduality');
-              this.spanGradualityValue.text(currentGraduality);
-              this.inputGradualityValue.val(currentGraduality);
-              this.inputGradualityValue.prop('disabled', false);
-            } else {
-              this.spanGradualityValue.text('');
-              this.inputGradualityValue.prop('disabled', true);
-            }
-          }.bind(this))
+          if (this.viewModel.has('graduality')) {
+            var currentGraduality = this.viewModel.get('graduality');
+            this.spanGradualityValue.text(currentGraduality);
+            this.inputGradualityValue.val(currentGraduality);
+            this.inputGradualityValue.prop('disabled', false);
+          } else {
+            this.spanGradualityValue.text('');
+            this.inputGradualityValue.prop('disabled', true);
+          }
+        }.bind(this))
         .on('change:playInterval change:currentTime', function() {
-            var isPlaying = this.viewModel.has('playInterval');
-            this.buttonPlay.prop('disabled', !this.viewModel.has('currentTime') || isPlaying);
-            this.buttonPause.prop('disabled', !isPlaying);
-          }.bind(this))
+          var isPlaying = this.viewModel.has('playInterval');
+          this.buttonPlay.prop('disabled', !this.viewModel.has('currentTime') || isPlaying);
+          this.buttonPause.prop('disabled', !isPlaying);
+        }.bind(this))
+        .on('change:realtime', function(viewModel, realtime) {
+          if (realtime) {
+            this.$('#routes-playback-toolbar').hide();
+          } else {
+            this.$('#routes-playback-toolbar').show();
+          }
+        }.bind(this))
         .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval');
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {

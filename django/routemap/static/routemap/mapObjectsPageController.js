@@ -56,40 +56,42 @@ define(
     this.pageProgress = $('#routes-map-progress');
     this.pageProgress.hide();
 
-    this.searchManager.on('search:progress', function() {
-      this.pageProgress.toggle();
-    }.bind(this));
-
-    this.searchManager.on('search:start', function() {
+    this.searchManager
+    .on('search:start', function() {
       this.mapObjectsView.viewModel.pause();
       this.mapObjectsView.viewModel.removeAllObjects();
+      // Realtime search does not fire done event
+      if (!this.mapObjectsView.viewModel.realtime()) {
+        this.pageProgress.show();
+      }
+    }.bind(this))
+    .on('search:done', function() {
+      this.pageProgress.hide();
+    }.bind(this))
+    .on('search:failed', function() {
+      this.pageProgress.hide();
+      // TODO: Show error to user
     }.bind(this));
 
     // Connect to search
     var routesData = this.searchManager.data('results', {count: 0, output_mode: 'json'});
     routesData.on('data', function() {
-      if (!routesData.hasData()) {
-        return;
-      }
+      if (routesData.hasData()) {
+        var results = routesData.data().results;
+        for (var rIndex = 0; rIndex < results.length; rIndex++) {
+          var result = results[rIndex];
 
-      this.pageProgress.show();
-      
-      var results = routesData.data().results;
-      for (var rIndex = 0; rIndex < results.length; rIndex++) {
-        var result = results[rIndex];
-
-        if (result.data) {
-          var data = result.data.split(';');
-          var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
-          delete result['data'];
-          this.mapObjectsView.viewModel.addData(result, point);
+          if (result.data) {
+            var data = result.data.split(';');
+            var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
+            delete result['data'];
+            this.mapObjectsView.viewModel.addData(result, point);
+          }
         }
+        
+        this.mapObjectsView.viewModel.autoZoom();
+        this.mapObjectsView.viewModel.play();
       }
-      
-      this.mapObjectsView.viewModel.autoZoom();
-      this.mapObjectsView.viewModel.play();
-
-      this.pageProgress.hide();
     }.bind(this));
   };
 
