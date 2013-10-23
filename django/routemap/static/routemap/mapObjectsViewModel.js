@@ -160,7 +160,7 @@ define(
       // Calculate bounds of all visible objects
       var bounds = new google.maps.LatLngBounds();
       this.collection.each(function(model) {
-        if (model.showObject()) {
+        if (model.showObject() || model.showRoute()) {
           var points = model.getPoints();
           _.each(points, function(point) {
             bounds.extend(new google.maps.LatLng(point.lat, point.lon))
