@@ -7,10 +7,13 @@ define(
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
+  var maximumDefaultVisibleObjectsOnMap = 50;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
     '#615f22', '#747128', '#87842f', '#9b9735', '#aeaa3b', '#c0bb43', '#c7c355', '#ceca68', '#d4d17b', '#dbd88e', // Yellow
-    '#2d737f', '#338592', '#3996a6', '#3fa8b9', '#4fb3c3', '#61bbca', '#74c4d1', '#87ccd8', '#9ad5de', '#addde5', // Blue
+    '#2d737f', '#338592', '#3996a6', '#3fa8b9', '#4fb3c3', '#61bbca', '#74c4d1', '#87ccd8', '#9ad5de', '#addde5', // Blue,
+    '#562397', '#6227ad', '#6d2bc2', '#7a34d2', '#8749d7', '#955ddc', '#a372e1', '#b186e6', '#be9beb', '#ccb0ef', // Violet
+    '#af5b28', '#c4662c', '#d27238', '#d7814c', '#dc8f60', '#e19e75', '#e6ad8a', '#ebbb9e', '#efcab3', '#f4d9c8', // Orange-ish
   ];
 
   var getRandomColor = function() {
@@ -144,7 +147,14 @@ define(
                 lat: lat,
                 lng: lon,
                 title: this.get('title'),
-                zIndex: 1
+                zIndex: 1,
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 4,
+                  strokeColor: this.get('color'),
+                  strokeWeight: 4,
+                  strokeOpacity: 1
+                }
             });
           }
         } else {
@@ -286,7 +296,7 @@ define(
         model = new MapObject({ 
                         obj: obj, 
                         map: this.map,
-                        showObject: this.showAllObjects(),
+                        showObject: this.showAllObjects() && _.size(this.models) < maximumDefaultVisibleObjectsOnMap,
                         showRoute: this.showAllRoutes()
                      });
         this.models[id] = model;
