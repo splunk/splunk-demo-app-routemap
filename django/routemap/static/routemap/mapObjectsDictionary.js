@@ -201,6 +201,8 @@ define(
               return [p.lat, p.lon];
             });
 
+            path.reverse();
+
             this.polyline = this.map.drawPolyline({
               path: path,
               strokeColor: '#131540',
