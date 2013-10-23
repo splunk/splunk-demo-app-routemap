@@ -196,16 +196,18 @@ define(
         this.set({'showRoute': value});
 
         if (value) {
-          var path = _.map(this.getPoints(), function(p) {
-            return [p.lat, p.lon];
-          });
+          if (!this.polyline) {
+            var path = _.map(this.getPoints(), function(p) {
+              return [p.lat, p.lon];
+            });
 
-          this.polyline = this.map.drawPolyline({
-            path: path,
-            strokeColor: '#131540',
-            strokeOpacity: 0.6,
-            strokeWeight: 6
-          });
+            this.polyline = this.map.drawPolyline({
+              path: path,
+              strokeColor: '#131540',
+              strokeOpacity: 0.6,
+              strokeWeight: 6
+            });
+          }
         } else {
           if (this.polyline) {
             this.polyline.setMap(null);
@@ -235,6 +237,11 @@ define(
   * reset - all elements are going to be removed.
   */
   var MapObjectsDictionary = Backbone.Model.extend({
+
+    defaults: {
+      showAllObjects: true,
+      showAllRoutes: false
+    },
 
     /*
     * Backbone initialize method.
@@ -266,10 +273,23 @@ define(
       } else {
         model = new MapObject({ 
                         obj: obj, 
-                        map: this.map
+                        map: this.map,
+                        showObject: this.showAllObjects(),
+                        showRoute: this.showAllRoutes()
                      });
         this.models[id] = model;
         this.trigger('add', model);
+        model
+        .on('change:showObject', function(model, showObject) {
+          if (this.showAllObjects() && !showObject) {
+            this.showAllObjects(false, true /* silent */);
+          }
+        }.bind(this))
+        .on('change:showRoute', function(model, showRoute) {
+          if (this.showAllRoutes() && !showRoute) {
+            this.showAllRoutes(false, true /* silent */);
+          }
+        }.bind(this));
       }
 
       model.add(point);
@@ -283,6 +303,8 @@ define(
     reset: function() {
       this.trigger('reset');
       this.each(function(model, id) {
+        model.clearPos();
+        model.showRoute(false);
         this.trigger('remove', model);
         delete this.models[id];
       }.bind(this));
@@ -301,6 +323,44 @@ define(
           action(this.models[id], id);
         }
       }
+    },
+
+    /*
+    * Gets a value indicating whether all objects should be be visible.
+    */ 
+    showAllObjects: function(value, silent) {
+      if (!_.isUndefined(value)) {
+        var oldValue = this.get('showAllObjects');
+
+        this.set('showAllObjects', value);
+
+        if (oldValue !== value && !silent) {
+          this.each(function(model) {
+            model.showObject(value);
+          });
+        }
+      }
+
+      return this.get('showAllObjects');
+    },
+
+    /*
+    * Gets a value indicating whether all objects routes should be be visible.
+    */ 
+    showAllRoutes: function(value, silent) {
+      if (!_.isUndefined(value)) {
+        var oldValue = this.get('showAllRoutes');
+
+        this.set('showAllRoutes', value);
+
+        if (oldValue !== value && !silent) {
+          this.each(function(model) {
+            model.showRoute(value);
+          });
+        }
+      }
+
+      return this.get('showAllRoutes');
     }
   });
 

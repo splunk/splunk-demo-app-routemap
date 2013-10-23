@@ -112,7 +112,6 @@ define(
     */ 
     removeAllObjects: function() {
       this.pause();
-      this.collection.each(function(obj) { obj.clearPos(); })
       this.collection.reset();
       this.unset({currentTime: null, beginTime: null, endTime: null});
     },

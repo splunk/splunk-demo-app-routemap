@@ -108,7 +108,15 @@ define(
 
         this.listenTo(this.viewModel.collection, 'reset', function() {
           this.objectsListView.empty();
-        }.bind(this))
+        }.bind(this));
+
+        this.viewModel.collection
+          .on('change:showAllObjects', function(model, showAllObjects) {
+            this.checkboxAllObjects.prop('checked', showAllObjects);
+          }.bind(this))
+          .on('change:showAllRoutes', function(model, showAllRoutes) {
+            this.checkboxAllRoutes.prop('checked', showAllRoutes);
+          }.bind(this));
     },
 
     // Event handlers
@@ -145,17 +153,13 @@ define(
 
     userToggleAllRoutes: function() {
       var value = this.checkboxAllRoutes.prop('checked');
-      this.viewModel.collection.each(function(model) {
-        model.showRoute(value);
-      });
+      this.viewModel.collection.showAllRoutes(value);
     },
 
     userToggleAllObjects: function() {
       this.viewModel.pause();
       var value = this.checkboxAllObjects.prop('checked');
-      this.viewModel.collection.each(function(model) {
-        model.showObject(value);
-      });
+      this.viewModel.collection.showAllObjects(value);
     }
   });
 
