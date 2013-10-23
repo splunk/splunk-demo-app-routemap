@@ -7,6 +7,15 @@ define(
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
+  var defaultColors = [
+    '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
+    '#615f22', '#747128', '#87842f', '#9b9735', '#aeaa3b', '#c0bb43', '#c7c355', '#ceca68', '#d4d17b', '#dbd88e', // Yellow
+    '#2d737f', '#338592', '#3996a6', '#3fa8b9', '#4fb3c3', '#61bbca', '#74c4d1', '#87ccd8', '#9ad5de', '#addde5', // Blue
+  ];
+
+  var getRandomColor = function() {
+    return defaultColors[Math.floor(Math.random() * defaultColors.length)];
+  };
 
   /*
   * Generate title string from object's fields. 
@@ -47,7 +56,8 @@ define(
         obj: {},
         points: [],
         showObject: true,
-        showRoute: false
+        showRoute: false,
+        color: getRandomColor()
       };
     },
 
@@ -205,7 +215,7 @@ define(
 
             this.polyline = this.map.drawPolyline({
               path: path,
-              strokeColor: '#131540',
+              strokeColor: this.get('color'),
               strokeOpacity: 0.6,
               strokeWeight: 6
             });
