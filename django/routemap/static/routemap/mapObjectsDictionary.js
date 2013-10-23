@@ -227,7 +227,7 @@ define(
               path: path,
               strokeColor: this.get('color'),
               strokeOpacity: 0.6,
-              strokeWeight: 6
+              strokeWeight: 2
             });
           }
         } else {
