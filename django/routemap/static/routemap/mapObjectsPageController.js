@@ -51,6 +51,11 @@ define(
     // Update the search manager when the timerange in the searchbar changes
     this.searchBarView.timerange.on('change', function(timerange) {
       this.mapObjectsView.viewModel.realtime(timerange.latest_time === 'rt');
+      if (this.mapObjectsView.viewModel.realtime()) {
+        // TODO: set timeWindow
+      } else {
+        this.mapObjectsView.viewModel.timeWindow(null);
+      }
       this.searchManager.search.set(this.searchBarView.timerange.val());
     }.bind(this));
 
