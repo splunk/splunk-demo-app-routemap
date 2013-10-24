@@ -82,8 +82,6 @@ define(
     var dataHandler = function(results) {
       var dataPoints = [];
 
-      var hasData = this.mapObjectsView.viewModel.has('currentTime');
-
       for (var rIndex = 0; rIndex < results.length; rIndex++) {
         var result = results[rIndex];
         
@@ -95,12 +93,7 @@ define(
         }
       }
 
-      this.mapObjectsView.viewModel.addDataPoints(dataPoints);
-      
-      if (!hasData) {
-        this.mapObjectsView.viewModel.autoZoom();
-      }
-      this.mapObjectsView.viewModel.play();
+      this.mapObjectsView.renderPoints(dataPoints);
     }.bind(this);
 
     // Connect to search

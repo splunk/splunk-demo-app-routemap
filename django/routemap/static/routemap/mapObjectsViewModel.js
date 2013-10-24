@@ -32,7 +32,7 @@ define(
             'change:showObject', 
             function(model, showObject) {
               if (showObject) {
-                model.calculatePos(this.currentTime(), this.realtime())
+                model.calculatePos(this.currentTime(), this.realtime(), this.timeWindow());
               }
             }.bind(this));
         }.bind(this))
@@ -52,9 +52,10 @@ define(
         this.set('currentTime', value);
         this.collection.each(function(obj) {
           if (obj.showObject()) {
-            obj.calculatePos(value, this.realtime());
+            obj.calculatePos(value, this.realtime(), this.timeWindow());
           }
         }.bind(this));
+        this.collection.clearEmptyObjects();
       }
       
       return this.get('currentTime');
@@ -172,7 +173,7 @@ define(
     },
 
     /*
-    * Gets or sets if current view is in realtime.
+    * Gets or sets if current view is in real-time mode.
     */
     realtime: function(value) {
       if (!_.isUndefined(value)) {
@@ -183,7 +184,21 @@ define(
       }
 
       return this.get('realtime');
-    }
+    },
+
+    /*
+    * Gets or sets time window (use it for real-time mode).
+    */
+    timeWindow: function(value) {
+      if (!_.isUndefined(value)) {
+        if (value) {
+          this.pause();
+        }
+        this.set('timeWindow', value);
+      }
+
+      return this.get('timeWindow');
+    },
   });
 
   return MapObjectsViewModel;

@@ -40,6 +40,8 @@ define(
       this.checkboxAllObjects = this.$('#map-objects-header input[type=checkbox]:first');
       this.checkboxAllRoutes = this.$('#map-objects-header input[type=checkbox]:last');
 
+      this.objectsList = {};
+
       // Connect view to view-model
       this.viewModel
         .on('change:currentTime', function() {
@@ -103,11 +105,22 @@ define(
         .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval change:realtime');
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {
-          this.objectsListView.append((new MapObjectListView({model: model})).render().el);
+          var lvItem = this.objectsList[model.modelId()] = new MapObjectListViewItem({model: model});
+          this.objectsListView.append(lvItem.render().el);
         }.bind(this));
 
         this.listenTo(this.viewModel.collection, 'reset', function() {
           this.objectsListView.empty();
+          this.objectsList = {};
+        }.bind(this));
+
+        this.listenTo(this.viewModel.collection, 'remove', function(model) {
+          var id = model.modelId();
+          var lvItem = this.objectsList[id];
+          if (lvItem) {
+            lvItem.$el.remove();
+            delete this.objectsList[id];
+          }
         }.bind(this));
 
         this.viewModel.collection
@@ -160,10 +173,41 @@ define(
       this.viewModel.pause();
       var value = this.checkboxAllObjects.prop('checked');
       this.viewModel.collection.showAllObjects(value);
-    }
+    },
+
+    renderPoints: function(dataPoints) {
+      var hasData = this.viewModel.has('currentTime');
+
+      this.viewModel.addDataPoints(dataPoints);
+      
+      if (!hasData) {
+        this.viewModel.autoZoom();
+      }
+
+      this._sortObjectsList();
+
+      this.viewModel.play();
+    },
+
+    _sortObjectsList: function() {
+        // Get all list view items
+        var lvItems = _.values(this.objectsList);
+        // Detach all ui elements from list
+        _.each(lvItems, function(lvItem){
+          lvItem.$el.detach();
+        });
+        // Sort them by title
+        lvItems = _.sortBy(lvItems, function(lvItem) {
+          return lvItem.model.get('title');
+        });
+        // Append items again
+        _.each(lvItems, function(lvItem) {
+          this.objectsListView.append(lvItem.el);
+        }.bind(this));
+      }
   });
 
-  var MapObjectListView = Backbone.View.extend({
+  var MapObjectListViewItem = Backbone.View.extend({
     
     tagName: 'li',
 

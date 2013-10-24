@@ -7,7 +7,7 @@ define(
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
-  var maximumDefaultVisibleObjectsOnMap = 50;
+  var maximumDefaultVisibleObjectsOnMap = 500;
   var defaultOpacity = .6;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
@@ -17,6 +17,9 @@ define(
     '#af5b28', '#c4662c', '#d27238', '#d7814c', '#dc8f60', '#e19e75', '#e6ad8a', '#ebbb9e', '#efcab3', '#f4d9c8', // Orange-ish
   ];
 
+  /*
+  * Gets random color from defaultColors list, example '#236326'.
+  */ 
   var getRandomColor = function() {
     return defaultColors[Math.floor(Math.random() * defaultColors.length)];
   };
@@ -43,6 +46,13 @@ define(
     } 
 
     return title;
+  };
+
+  /*
+  * Gets a value indicating whether this point still in default object timeout limit.
+  */
+  function inTimeoutLimit(currentTime, point) {
+    return Math.abs(currentTime - point.ts, 0) <= defaultObjectTimeout;
   }
 
   /*
@@ -62,7 +72,8 @@ define(
         showObject: true,
         showRoute: false,
         color: getRandomColor(),
-        realtimeWindow: 300 // Window of storing data
+        realtimeWindow: 300, // Window of storing data
+        modelId: ''
       };
     },
 
@@ -127,13 +138,17 @@ define(
           var deadline = currentTime - timeWindow;
           var firstPoint = _.first(points);
           while (firstPoint.ts < deadline) {
+            if (points.length === 1 
+              && inTimeoutLimit(currentTime, _.first(points))) {
+              break;
+            }
             firstPoint = points.shift();
           }
         }
 
         if (realtime) {
           var lastPoint = _.last(points);
-          if (lastPoint && Math.abs(currentTime - lastPoint.ts, 0) <= defaultObjectTimeout) {
+          if (lastPoint) {
             lat = lastPoint.lat;
             lon = lastPoint.lon;
           }
@@ -305,6 +320,20 @@ define(
             }.bind(this)
           })
       ;
+    },
+
+    /*
+    * Gets a value indicating whether this object does not have any points. 
+    */ 
+    isEmpty: function() {
+      return _.isEmpty(this.getPoints());
+    },
+
+    /*
+    * Gets an unique identified for this object.
+    */
+    modelId: function() {
+      return this.get('modelId');
     }
   });
 
@@ -358,7 +387,8 @@ define(
                         obj: obj, 
                         map: this.map,
                         showObject: this.showAllObjects() && !showLimitAmountOfObjects,
-                        showRoute: this.showAllRoutes() && !showLimitAmountOfObjects
+                        showRoute: this.showAllRoutes() && !showLimitAmountOfObjects,
+                        modelId: id
                      });
         this.models[id] = model;
         this.trigger('add', model);
@@ -444,6 +474,17 @@ define(
       }
 
       return this.get('showAllRoutes');
+    },
+
+    clearEmptyObjects: function() {
+      this.each(function(model, id) {
+        if (model.isEmpty()) {
+          model.clearPos();
+          model.showRoute(false);
+          this.trigger('remove', model);
+          delete this.models[id];
+        }
+      }.bind(this));
     }
   });
 
