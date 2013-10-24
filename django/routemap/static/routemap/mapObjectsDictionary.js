@@ -8,6 +8,7 @@ define(
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
   var maximumDefaultVisibleObjectsOnMap = 50;
+  var defaultOpacity = .6;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
     '#615f22', '#747128', '#87842f', '#9b9735', '#aeaa3b', '#c0bb43', '#c7c355', '#ceca68', '#d4d17b', '#dbd88e', // Yellow
@@ -57,10 +58,11 @@ define(
       return {
         title: '',
         obj: {},
-        points: [],
+        points: [], // points ordered by ts asc 
         showObject: true,
         showRoute: false,
-        color: getRandomColor()
+        color: getRandomColor(),
+        realtimeWindow: 300 // Window of storing data
       };
     },
 
@@ -86,6 +88,7 @@ define(
     * Add new point for object,
     * @param point - should be in format 
     *               { ts: [float], lat: [float], lon: [float] }
+    *
     */ 
     add: function(point) {
       if (!point 
@@ -94,7 +97,11 @@ define(
         || !_.isNumber(point.lon)) {
         throw 'Argument exception. Invalid point format';
       }
-      this.getPoints().unshift(point);
+      var points = this.getPoints();
+      if (_.last(points) && _.last(points).ts > point.ts) {
+        throw 'We expect to see all points to be added to desc order by timestamp';
+      }
+      points.push(point);
       if (this.showRoute() && this.polyline) {
         this.polyline.getPath().push(new google.maps.LatLng(point.lat, point.lon));
       }
@@ -108,15 +115,24 @@ define(
     *
     * Current method calculates position and set it as backbone model field `pos`.
     */
-    calculatePos: function(currentTime, realtime) {
+    calculatePos: function(currentTime, realtime, timeWindow) {
       if (this.showObject()) {
         // Trying to find point 
         var points = this.getPoints();
 
         var lat, lon;
 
+        if (timeWindow) {
+          // At first let's remove all old points.
+          var deadline = currentTime - timeWindow;
+          var firstPoint = _.first(points);
+          while (firstPoint.ts < deadline) {
+            firstPoint = points.shift();
+          }
+        }
+
         if (realtime) {
-          var lastPoint = _.first(points);
+          var lastPoint = _.last(points);
           if (lastPoint && Math.abs(currentTime - lastPoint.ts, 0) <= defaultObjectTimeout) {
             lat = lastPoint.lat;
             lon = lastPoint.lon;
@@ -226,7 +242,7 @@ define(
             this.polyline = this.map.drawPolyline({
               path: path,
               strokeColor: this.get('color'),
-              strokeOpacity: 0.6,
+              strokeOpacity: defaultOpacity,
               strokeWeight: 4
             });
           }
@@ -247,23 +263,28 @@ define(
       return this.get('points');
     },
 
-    higlightObject: function() {
+    /*
+    * Highlight object on the map. 
+    */
+    highlightObject: function() {
       if (!this.showRoute()) this.showRoute(true);
       if (!this.showObject()) this.showObject(true);
 
+      // Auto zoom to show route and marker
       var bounds = new google.maps.LatLngBounds();
       _.each(this.getPoints(), function(point) {
         bounds.extend(new google.maps.LatLng(point.lat, point.lon))
       });
       this.map.fitBounds(bounds);
 
+      // Highlight object
       var animation = {step: 0};
       $(animation).animate(
           { step: 2 },
           {
             duration: 1000,
             easing: 'linear',
-            progress: function(promise, progress, ms) {
+            progress: function() {
               if (this.polyline) {
                 var step = (animation.step - Math.floor(animation.step));
                 if (step === 1 || step === 5) {
@@ -279,7 +300,7 @@ define(
             }.bind(this),
             complete: function() {
               if (this.polyline) {
-                this.polyline.setOptions({strokeOpacity:.6});
+                this.polyline.setOptions({ strokeOpacity:defaultOpacity });
               }
             }.bind(this)
           })
@@ -332,11 +353,12 @@ define(
       if (this.models.hasOwnProperty(id)) {
         model = this.models[id];
       } else {
+        var showLimitAmountOfObjects = _.size(this.models) > maximumDefaultVisibleObjectsOnMap;
         model = new MapObject({ 
                         obj: obj, 
                         map: this.map,
-                        showObject: this.showAllObjects() && _.size(this.models) < maximumDefaultVisibleObjectsOnMap,
-                        showRoute: this.showAllRoutes()
+                        showObject: this.showAllObjects() && !showLimitAmountOfObjects,
+                        showRoute: this.showAllRoutes() && !showLimitAmountOfObjects
                      });
         this.models[id] = model;
         this.trigger('add', model);

@@ -172,7 +172,7 @@ define(
     events: {
       'click input[type=checkbox]:first': 'toggleShowObject',
       'click input[type=checkbox]:last': 'toggleShowRoute',
-      'click a.colorBlock': 'higlightObject'
+      'click a.colorBlock': 'highlightObject'
     },
 
     initialize: function() {
@@ -198,8 +198,8 @@ define(
       this.model.toggleShowRoute();
     },
 
-    higlightObject: function() {
-      this.model.higlightObject();
+    highlightObject: function() {
+      this.model.highlightObject();
     }
   })
 
