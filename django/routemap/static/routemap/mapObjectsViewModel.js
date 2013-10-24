@@ -14,8 +14,8 @@ define(
     * Default values for view model.
     */
     defaults: {
-      graduality: 10,
-      speed: 150
+      graduality: 2,
+      speed: 10
     },
 
     /*
@@ -191,9 +191,6 @@ define(
     */
     timeWindow: function(value) {
       if (!_.isUndefined(value)) {
-        if (value) {
-          this.pause();
-        }
         this.set('timeWindow', value);
       }
 

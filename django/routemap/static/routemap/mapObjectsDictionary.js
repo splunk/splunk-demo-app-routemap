@@ -299,6 +299,13 @@ define(
           {
             duration: 1000,
             easing: 'linear',
+            start: function() {
+              if (this.polyline) this.polyline.setZIndex(100);
+              if (this.marker) {
+                this.marker.setZIndex(100);
+                this.marker.setAnimation(google.maps.Animation.BOUNCE);
+              }
+            }.bind(this),
             progress: function() {
               if (this.polyline) {
                 var step = (animation.step - Math.floor(animation.step));
@@ -316,6 +323,11 @@ define(
             complete: function() {
               if (this.polyline) {
                 this.polyline.setOptions({ strokeOpacity:defaultOpacity });
+              }
+              if (this.polyline) this.polyline.setOptions({ zIndex: 1 , strokeOpacity:defaultOpacity });
+              if (this.marker) {
+                this.marker.setZIndex(1);
+                this.marker.setAnimation(null);
               }
             }.bind(this)
           })
