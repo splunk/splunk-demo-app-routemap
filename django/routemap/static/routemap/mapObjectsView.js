@@ -170,8 +170,9 @@ define(
     template: _.template($('#map-object-list-template').html()),
 
     events: {
-      "click input[type=checkbox]:first": "toggleShowObject",
-      "click input[type=checkbox]:last": "toggleShowRoute"
+      'click input[type=checkbox]:first': 'toggleShowObject',
+      'click input[type=checkbox]:last': 'toggleShowRoute',
+      'click a.colorBlock': 'higlightObject'
     },
 
     initialize: function() {
@@ -195,6 +196,10 @@ define(
 
     toggleShowRoute: function() {
       this.model.toggleShowRoute();
+    },
+
+    higlightObject: function() {
+      this.model.higlightObject();
     }
   })
 

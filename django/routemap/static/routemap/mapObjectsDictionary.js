@@ -227,7 +227,7 @@ define(
               path: path,
               strokeColor: this.get('color'),
               strokeOpacity: 0.6,
-              strokeWeight: 2
+              strokeWeight: 4
             });
           }
         } else {
@@ -245,6 +245,45 @@ define(
     */
     getPoints: function() {
       return this.get('points');
+    },
+
+    higlightObject: function() {
+      if (!this.showRoute()) this.showRoute(true);
+      if (!this.showObject()) this.showObject(true);
+
+      var bounds = new google.maps.LatLngBounds();
+      _.each(this.getPoints(), function(point) {
+        bounds.extend(new google.maps.LatLng(point.lat, point.lon))
+      });
+      this.map.fitBounds(bounds);
+
+      var animation = {step: 0};
+      $(animation).animate(
+          { step: 2 },
+          {
+            duration: 1000,
+            easing: 'linear',
+            progress: function(promise, progress, ms) {
+              if (this.polyline) {
+                var step = (animation.step - Math.floor(animation.step));
+                if (step === 1 || step === 5) {
+                  step *= .4;
+                } else {
+                  step *= .8;
+                }
+                if (step % 2 !== 0) {
+                  step = 1 - step;
+                }
+                this.polyline.setOptions({strokeOpacity:step});
+              }
+            }.bind(this),
+            complete: function() {
+              if (this.polyline) {
+                this.polyline.setOptions({strokeOpacity:.6});
+              }
+            }.bind(this)
+          })
+      ;
     }
   });
 

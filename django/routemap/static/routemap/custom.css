@@ -95,3 +95,9 @@
     min-width: 30px;
     display: inline-block;
 }
+
+.colorBlock {
+    display:inline-block; 
+    width: 20px; 
+    height: 10px;
+}
