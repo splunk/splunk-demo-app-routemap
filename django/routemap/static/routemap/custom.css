@@ -20,8 +20,7 @@
         display: inline-block;
     }
 
-    #routes-map-view label[for=input-graduality-value],
-    #routes-map-view label[for=input-speed-value] {
+    #routes-map-view .toolbarLabel {
         margin-left: 30px;
         margin-right: 10px;
     }
