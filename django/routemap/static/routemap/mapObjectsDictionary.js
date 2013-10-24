@@ -300,7 +300,7 @@ define(
             duration: 1000,
             easing: 'linear',
             start: function() {
-              if (this.polyline) this.polyline.setZIndex(100);
+              if (this.polyline) this.polyline.setOptions({ zIndex: 100 });
               if (this.marker) {
                 this.marker.setZIndex(100);
                 this.marker.setAnimation(google.maps.Animation.BOUNCE);
