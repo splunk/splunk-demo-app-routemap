@@ -63,12 +63,9 @@
         margin-top: -2px;
     }
 
-    #routes-map-progress {
-        position: relative;
-    }
-
-    #routes-map-progress {
-    }
+#routes-map-progress {
+    position: relative;
+}
 
     #routes-map-progress .progress-background {
         position: absolute;
@@ -89,6 +86,16 @@
     height: 100%;
     width: 100%;
 }
+
+    /* Bootstrap Css Map Fix*/
+    #map  img { 
+      max-width: none;
+    }
+    /* Bootstrap Css Map Fix*/
+    #map label { 
+      width: auto; 
+      display:inline; 
+    }
 
 .min-width-30 {
     min-width: 30px;
