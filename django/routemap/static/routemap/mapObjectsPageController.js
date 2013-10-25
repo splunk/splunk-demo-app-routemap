@@ -50,9 +50,48 @@ define(
 
     // Update the search manager when the timerange in the searchbar changes
     this.searchBarView.timerange.on('change', function(timerange) {
-      this.mapObjectsView.viewModel.realtime(timerange.latest_time === 'rt');
+      this.mapObjectsView.viewModel.realtime((/^rt(now)?$/).test(timerange.latest_time));
       if (this.mapObjectsView.viewModel.realtime()) {
-        // TODO: set timeWindow
+
+        // If we have limit for how long we want to keep points - parse it and set it 
+        var matches = (/rt-(\d+)(s|m|h|d|w|mon|q|y)/).exec(timerange.earliest_time);
+        if (matches.length === 3) {
+          var n = parseInt(matches[1]);
+          
+          var daysMultiplier;
+          switch(matches[2]) {
+            case 'y': // year
+              daysMultiplier = 356;
+              break;
+            case 'q': // quarter 
+              daysMultiplier = (356/4);
+              break;
+            case 'mon': // month
+              daysMultiplier = 31;
+              break;
+            case 'w': // week
+              daysMultiplier = 7;
+              break;
+          }
+
+          switch(matches[2]) {
+            case 'y': // year
+            case 'q': // quarter 
+            case 'mon': // month
+            case 'w': // week
+              n *= daysMultiplier;
+            case 'd': // day
+              n *= 24;
+            case 'h': // hour
+              n *= 60;
+            case 'm': // minute
+              n *= 60;
+            case 's': // second
+              break;
+          }
+
+          this.mapObjectsView.viewModel.timeWindow(n);
+        }
       } else {
         this.mapObjectsView.viewModel.timeWindow(null);
       }

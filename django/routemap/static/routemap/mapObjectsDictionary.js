@@ -143,6 +143,9 @@ define(
               break;
             }
             firstPoint = points.shift();
+            if (this.polyline) {
+              this.polyline.getPath().removeAt(0);
+            }
           }
         }
 

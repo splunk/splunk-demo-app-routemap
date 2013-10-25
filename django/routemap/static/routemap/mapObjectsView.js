@@ -177,6 +177,16 @@ define(
 
     renderPoints: function(dataPoints) {
       var hasData = this.viewModel.has('currentTime');
+      if (!hasData) {
+        if (!this.viewModel.collection.showAllObjects()) {
+          this.checkboxAllObjects.prop('checked', true);
+          this.viewModel.collection.showAllObjects(true);
+        }
+        if (this.viewModel.collection.showAllRoutes()) {
+          this.checkboxAllRoutes.prop('checked', false);
+          this.viewModel.collection.showAllRoutes(false);
+        }
+      }
 
       this.viewModel.addDataPoints(dataPoints);
       
