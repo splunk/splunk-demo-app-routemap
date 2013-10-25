@@ -5,5 +5,5 @@ from splunkdj.decorators.render import render_to
 @login_required
 def map(request):
     return {
-        "app_name": "Route Map"
+        "app_name": "routemap"
     }
