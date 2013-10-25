@@ -18,7 +18,7 @@ define(
 
   var PageController = function() {
 
-    var defaultTimerange = { earliest_time:"-60m@m", latest_time:"now" };
+    var defaultTimerange = { earliest_time:"rt-30m", latest_time:"rtnow" };
 
     this.mapObjectsView = new MapObjectsView();
 

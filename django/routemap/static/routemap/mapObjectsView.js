@@ -94,7 +94,9 @@ define(
           this.buttonPlay.prop('disabled', (!this.viewModel.has('currentTime') || isPlaying) || realtime);
           this.buttonPause.prop('disabled', (!isPlaying) || realtime);
         }.bind(this))
-        .on('change:realtime', function(viewModel, realtime) {
+        .on('change:realtime', function() {
+          var realtime = this.viewModel.realtime();
+          
           if (realtime) {
             this.inputSpeedValue.parent().hide();
             this.inputGradualityValue.parent().hide();

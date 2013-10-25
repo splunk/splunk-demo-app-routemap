@@ -16,7 +16,7 @@ define(
     defaults: {
       graduality: 2,
       speed: 10,
-      realtime: false
+      realtime: true
     },
 
     /*
@@ -94,6 +94,9 @@ define(
           this.collection.addData(p.obj, p.point);
         }
       }.bind(this));
+      if (this.has('timeWindow')) {
+        beginTime = Math.max(endTime - this.timeWindow(), beginTime);
+      }
       if (beginTime) this.set('beginTime', beginTime);
       if (endTime) this.set('endTime', endTime);
     },
