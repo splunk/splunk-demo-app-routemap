@@ -30,7 +30,7 @@ define(
       status_buckets: 300,
       earliest_time: defaultTimerange.earliest_time,
       latest_time: defaultTimerange.latest_time,
-      search: 'source=firebase | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
+      search: 'source="sf-muni-data" | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
     });
 
     this.searchPanel = $('#searchPanel');
