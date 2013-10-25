@@ -7,7 +7,6 @@ define(
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
-  var maximumDefaultVisibleObjectsOnMap = 500;
   var defaultOpacity = .6;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
@@ -397,12 +396,11 @@ define(
       if (this.models.hasOwnProperty(id)) {
         model = this.models[id];
       } else {
-        var showLimitAmountOfObjects = _.size(this.models) > maximumDefaultVisibleObjectsOnMap;
         model = new MapObject({ 
                         obj: obj, 
                         map: this.map,
-                        showObject: this.showAllObjects() && !showLimitAmountOfObjects,
-                        showRoute: this.showAllRoutes() && !showLimitAmountOfObjects,
+                        showObject: this.showAllObjects(),
+                        showRoute: this.showAllRoutes(),
                         modelId: id
                      });
         this.models[id] = model;
