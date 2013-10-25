@@ -107,3 +107,7 @@
     width: 20px; 
     height: 10px;
 }
+
+.form-inline .block {
+    display: inline-block;
+}

@@ -15,7 +15,8 @@ define(
     */
     defaults: {
       graduality: 2,
-      speed: 10
+      speed: 10,
+      realtime: false
     },
 
     /*

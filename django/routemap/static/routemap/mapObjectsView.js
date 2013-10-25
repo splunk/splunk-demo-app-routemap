@@ -16,9 +16,9 @@ define(
       'change #input-speed-value': 'userChangeSpeed',
       'change #input-graduality-value': 'userChangeGraduality',
       'change #input-time': 'userChangeTime',
-      'click button[name=button-play]': 'userPlay',
-      'click button[name=button-pause]': 'userPause',
-      'click button[name=button-autozoom]': 'userAutoZoom',
+      'click #button-play': 'userPlay',
+      'click #button-pause': 'userPause',
+      'click #button-autozoom': 'userAutoZoom',
       'click #map-objects-header input[type=checkbox]:first': 'userToggleAllObjects',
       'click #map-objects-header input[type=checkbox]:last': 'userToggleAllRoutes',
     },
@@ -47,7 +47,7 @@ define(
         .on('change:currentTime', function() {
           this.labelCurrentTime.text(
             this.viewModel.has('currentTime') ? (new Date(this.viewModel.currentTime() * 1000)).toLocaleString() : '');
-          this.inputTime.prop('disabled', !this.viewModel.has('currentTime'));
+          this.inputTime.prop('disabled', !this.viewModel.has('currentTime') || this.viewModel.realtime());
           this.inputTime.val(this.viewModel.currentTime());
         }.bind(this))
         .on('change:beginTime', function() {
@@ -88,19 +88,24 @@ define(
             this.inputGradualityValue.prop('disabled', true);
           }
         }.bind(this))
-        .on('change:playInterval change:currentTime', function() {
+        .on('change:playInterval change:currentTime change:realtime', function() {
           var isPlaying = this.viewModel.has('playInterval');
-          this.buttonPlay.prop('disabled', !this.viewModel.has('currentTime') || isPlaying);
-          this.buttonPause.prop('disabled', !isPlaying);
+          var realtime = this.viewModel.realtime();
+          this.buttonPlay.prop('disabled', (!this.viewModel.has('currentTime') || isPlaying) || realtime);
+          this.buttonPause.prop('disabled', (!isPlaying) || realtime);
         }.bind(this))
         .on('change:realtime', function(viewModel, realtime) {
           if (realtime) {
-            this.$('#routes-playback-toolbar').hide();
-            this.$('#routes-realtime-toolbar').show();
+            this.inputSpeedValue.parent().hide();
+            this.inputGradualityValue.parent().hide();
           } else {
-            this.$('#routes-playback-toolbar').show();
-            this.$('#routes-realtime-toolbar').hide();
+            this.inputSpeedValue.parent().show();
+            this.inputGradualityValue.parent().show();
           }
+
+          this.buttonPlay.prop('disabled', realtime);
+          this.buttonPause.prop('disabled', realtime);
+          this.inputTime.prop('disabled', realtime);
         }.bind(this))
         .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval change:realtime');
 

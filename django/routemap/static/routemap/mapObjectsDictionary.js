@@ -137,7 +137,7 @@ define(
           // At first let's remove all old points.
           var deadline = currentTime - timeWindow;
           var firstPoint = _.first(points);
-          while (firstPoint.ts < deadline) {
+          while (firstPoint && firstPoint.ts < deadline) {
             if (points.length === 1 
               && inTimeoutLimit(currentTime, _.first(points))) {
               break;
