@@ -43,7 +43,7 @@ define(
     },
 
     /*
-    * Set current time for view model.
+    * Gets or sets current time for view model.
     *
     * Method update each object on map and ask them to recalculate their
     * positions.
@@ -63,19 +63,79 @@ define(
     },
 
     /*
-    * Set begin time of current view model.
-    * @param time - timestamp.
+    * Gets or sets begin time for view model.
     */ 
-    setBeginTime: function(time) {
-      this.set('beginTime', time);
+    beginTime: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('beginTime', value);
+      }
+
+      return this.get('beginTime');
     },
 
     /*
-    * Set end time of current view model.
-    * @param time - timestamp.
+    * Gets or sets end time for view model.
     */ 
-    setEndTime: function(time) {
-      this.set('endTime', time);
+    endTime: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('endTime', value);
+      }
+
+      return this.get('endTime');
+    },
+
+    /*
+    * Gets or sets if current view is in real-time mode.
+    */
+    realtime: function(value) {
+      if (!_.isUndefined(value)) {
+        if (value) {
+          this.pause();
+        }
+        this.set('realtime', value);
+      }
+
+      return this.get('realtime');
+    },
+
+    /*
+    * Gets or sets time window (use it for real-time mode).
+    */
+    timeWindow: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('timeWindow', value);
+      }
+
+      return this.get('timeWindow');
+    },
+
+    /*
+    * Gets or sets playback speed.
+    */
+    speed: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('speed', value);
+      }
+
+      return this.get('speed');
+    },
+
+    /*
+    * Gets or sets playback graduality.
+    */
+    graduality: function(value) {
+      if (!_.isUndefined(value)) {
+        this.set('graduality', value);
+      }
+
+      return this.get('graduality');
+    },
+
+    /*
+    * Gets information if view model right now is in playback mode.
+    */
+    playbackMode: function() {
+      return this.has('playInterval');
     },
 
     /*
@@ -83,8 +143,8 @@ define(
     * @param data - array of { obj: [obj fields], point: { ts: [float], lat: [float], lon: [float]}}.
     */
     addDataPoints: function(data) {
-      var beginTime = this.has('beginTime') ? this.get('beginTime') : null;
-      var endTime = this.has('endTime') ? this.get('endTime') : null;
+      var beginTime = this.has('beginTime') ? this.beginTime() : null;
+      var endTime = this.has('endTime') ? this.endTime() : null;
       var currentTime = this.currentTime();
       var realtime = this.realtime();
       _.each(data, function(p) {
@@ -97,8 +157,8 @@ define(
       if (this.has('timeWindow')) {
         beginTime = Math.max(endTime - this.timeWindow(), beginTime);
       }
-      if (beginTime) this.set('beginTime', beginTime);
-      if (endTime) this.set('endTime', endTime);
+      if (beginTime) this.beginTime(beginTime);
+      if (endTime) this.endTime(endTime);
     },
 
     /*
@@ -107,8 +167,8 @@ define(
     * @param point - position of the object in time { ts: [float], lat: [float], lon: [float]}
     */
     addData: function(obj, point) {
-      this.set('beginTime', !this.has('beginTime') ? point.ts : Math.min(point.ts, this.get('beginTime')));
-      this.set('endTime', !this.has('endTime') ? point.ts : Math.max(point.ts, this.get('endTime')));
+      this.beginTime(!this.has('beginTime') ? point.ts : Math.min(point.ts, this.beginTime()));
+      this.endTime(!this.has('endTime') ? point.ts : Math.max(point.ts, this.endTime()));
       return this.collection.addData(obj, point);
     },
 
@@ -133,18 +193,18 @@ define(
       }
 
       if (this.realtime()) {
-        this.currentTime(this.get('endTime'));
+        this.currentTime(this.endTime());
       } else {
         if (!this.has('currentTime')) {
-          this.currentTime(this.get('beginTime'));
+          this.currentTime(this.beginTime());
         }
 
         this.set('playInterval', setInterval(function() {
-          this.currentTime(this.currentTime() + (this.get('speed') / this.get('graduality')));
-          if (this.currentTime() > this.get('endTime')) {
+          this.currentTime(this.currentTime() + (this.speed() / this.graduality()));
+          if (this.currentTime() > this.endTime()) {
             this.pause();
           } 
-        }.bind(this), (1000 / this.get('graduality'))));
+        }.bind(this), (1000 / this.graduality())));
       }
     }, 
 
@@ -174,32 +234,7 @@ define(
       });
 
       this.map.fitBounds(bounds);
-    },
-
-    /*
-    * Gets or sets if current view is in real-time mode.
-    */
-    realtime: function(value) {
-      if (!_.isUndefined(value)) {
-        if (value) {
-          this.pause();
-        }
-        this.set('realtime', value);
-      }
-
-      return this.get('realtime');
-    },
-
-    /*
-    * Gets or sets time window (use it for real-time mode).
-    */
-    timeWindow: function(value) {
-      if (!_.isUndefined(value)) {
-        this.set('timeWindow', value);
-      }
-
-      return this.get('timeWindow');
-    },
+    }
   });
 
   return MapObjectsViewModel;

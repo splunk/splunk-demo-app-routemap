@@ -489,6 +489,9 @@ define(
       return this.get('showAllRoutes');
     },
 
+    /*
+    * Clear all empty objects from collection.
+    */
     clearEmptyObjects: function() {
       this.each(function(model, id) {
         if (model.isEmpty()) {

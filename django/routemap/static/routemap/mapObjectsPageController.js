@@ -16,6 +16,52 @@ define(
 
   'use strict'
 
+  /*
+  * Extract seconds from strings, like 'rtnow-30m'.
+  */
+  var parseTimeWindow = function(searchProperty) {
+    var matches = (/rt-(\d+)(s|m|h|d|w|mon|q|y)/).exec(searchProperty);
+    if (matches.length === 3) {
+      var n = parseInt(matches[1]);
+      
+      var daysMultiplier;
+      switch(matches[2]) {
+        case 'y': // year
+          daysMultiplier = 356;
+          break;
+        case 'q': // quarter 
+          daysMultiplier = (356/4);
+          break;
+        case 'mon': // month
+          daysMultiplier = 31;
+          break;
+        case 'w': // week
+          daysMultiplier = 7;
+          break;
+      }
+
+      switch(matches[2]) {
+        case 'y': // year
+        case 'q': // quarter 
+        case 'mon': // month
+        case 'w': // week
+          n *= daysMultiplier;
+        case 'd': // day
+          n *= 24;
+        case 'h': // hour
+          n *= 60;
+        case 'm': // minute
+          n *= 60;
+        case 's': // second
+          break;
+      }
+
+      return n;
+    }
+
+    return null;
+  }
+
   var PageController = function() {
 
     var defaultTimerange = { earliest_time:"rt-30m", latest_time:"rtnow" };
@@ -52,46 +98,8 @@ define(
     this.searchBarView.timerange.on('change', function(timerange) {
       this.mapObjectsView.viewModel.realtime((/^rt(now)?$/).test(timerange.latest_time));
       if (this.mapObjectsView.viewModel.realtime()) {
-
-        // If we have limit for how long we want to keep points - parse it and set it 
-        var matches = (/rt-(\d+)(s|m|h|d|w|mon|q|y)/).exec(timerange.earliest_time);
-        if (matches.length === 3) {
-          var n = parseInt(matches[1]);
-          
-          var daysMultiplier;
-          switch(matches[2]) {
-            case 'y': // year
-              daysMultiplier = 356;
-              break;
-            case 'q': // quarter 
-              daysMultiplier = (356/4);
-              break;
-            case 'mon': // month
-              daysMultiplier = 31;
-              break;
-            case 'w': // week
-              daysMultiplier = 7;
-              break;
-          }
-
-          switch(matches[2]) {
-            case 'y': // year
-            case 'q': // quarter 
-            case 'mon': // month
-            case 'w': // week
-              n *= daysMultiplier;
-            case 'd': // day
-              n *= 24;
-            case 'h': // hour
-              n *= 60;
-            case 'm': // minute
-              n *= 60;
-            case 's': // second
-              break;
-          }
-
-          this.mapObjectsView.viewModel.timeWindow(n);
-        }
+        var timeWindow = parseTimeWindow(timerange.earliest_time);
+        this.mapObjectsView.viewModel.timeWindow(timeWindow);
       } else {
         this.mapObjectsView.viewModel.timeWindow(null);
       }
@@ -110,7 +118,8 @@ define(
     .on('search:start', function() {
       this.mapObjectsView.viewModel.pause();
       this.mapObjectsView.viewModel.removeAllObjects();
-      // Realtime search does not fire done event
+
+      // Real-time search does not fire done events
       if (!this.mapObjectsView.viewModel.realtime()) {
         this.pageProgress.show();
       }

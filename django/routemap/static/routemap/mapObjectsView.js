@@ -53,22 +53,22 @@ define(
         .on('change:beginTime', function() {
           if (this.viewModel.has('beginTime')) {
             this.inputTime.prop('min', this.viewModel.get('beginTime'));
-            this.labelBeginTime.text((new Date(this.viewModel.get('beginTime') * 1000)).toLocaleString());
+            this.labelBeginTime.text((new Date(this.viewModel.beginTime() * 1000)).toLocaleString());
           } else {
             this.labelBeginTime.text('');
           }
         }.bind(this))
         .on('change:endTime', function() {
           if (this.viewModel.has('endTime')) {
-            this.inputTime.prop('max', this.viewModel.get('endTime'));
-            this.labelEndTime.text((new Date(this.viewModel.get('endTime') * 1000)).toLocaleString());
+            this.inputTime.prop('max', this.viewModel.endTime());
+            this.labelEndTime.text((new Date(this.viewModel.endTime() * 1000)).toLocaleString());
           } else {
             this.labelEndTime.text('');
           }
         }.bind(this))
         .on('change:speed', function() {
           if (this.viewModel.has('speed')) {
-            var currentSpeed = this.viewModel.get('speed');
+            var currentSpeed = this.viewModel.speed();
             this.spanSpeedValue.text(currentSpeed);
             this.inputSpeedValue.val(currentSpeed);
             this.inputSpeedValue.prop('disabled', false);
@@ -79,7 +79,7 @@ define(
         }.bind(this))
         .on('change:graduality', function() {
           if (this.viewModel.has('graduality')) {
-            var currentGraduality = this.viewModel.get('graduality');
+            var currentGraduality = this.viewModel.graduality();
             this.spanGradualityValue.text(currentGraduality);
             this.inputGradualityValue.val(currentGraduality);
             this.inputGradualityValue.prop('disabled', false);
@@ -141,16 +141,16 @@ define(
 
     // Event handlers
     userChangeSpeed: function() {
-      var isPlaying = this.viewModel.has('playInterval');
+      var isPlaying = this.viewModel.playbackMode();
       if (isPlaying) this.viewModel.pause();
-      this.viewModel.set('speed', this.inputSpeedValue.val());
+      this.viewModel.speed(parseFloat(this.inputSpeedValue.val()));
       if (isPlaying) this.viewModel.play();
     },
 
     userChangeGraduality: function() {
-      var isPlaying = this.viewModel.has('playInterval');
+      var isPlaying = this.viewModel.playbackMode();
       if (isPlaying) this.viewModel.pause();
-      this.viewModel.set('graduality', parseFloat(this.inputGradualityValue.val()));
+      this.viewModel.graduality(parseFloat(this.inputGradualityValue.val()));
       if (isPlaying) this.viewModel.play();
     },
 
