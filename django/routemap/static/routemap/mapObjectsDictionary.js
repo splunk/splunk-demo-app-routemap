@@ -369,7 +369,7 @@ define(
 
     defaults: {
       showAllObjects: true,
-      showAllRoutes: false
+      showAllRoutes: true
     },
 
     /*
@@ -433,6 +433,7 @@ define(
     reset: function() {
       this.trigger('reset');
       this.each(function(model, id) {
+        model.off();
         model.clearPos();
         model.showRoute(false);
         this.trigger('remove', model);
@@ -499,6 +500,7 @@ define(
     clearEmptyObjects: function() {
       this.each(function(model, id) {
         if (model.isEmpty()) {
+          model.off();
           model.clearPos();
           model.showRoute(false);
           this.trigger('remove', model);

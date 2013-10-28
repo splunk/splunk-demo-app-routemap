@@ -189,9 +189,9 @@ define(
           this.checkboxAllObjects.prop('checked', true);
           this.viewModel.collection.showAllObjects(true);
         }
-        if (this.viewModel.collection.showAllRoutes()) {
-          this.checkboxAllRoutes.prop('checked', false);
-          this.viewModel.collection.showAllRoutes(false);
+        if (!this.viewModel.collection.showAllRoutes()) {
+          this.checkboxAllRoutes.prop('checked', true);
+          this.viewModel.collection.showAllRoutes(true);
         }
       }
 

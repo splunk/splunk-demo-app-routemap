@@ -67,13 +67,13 @@ define(
     this.mapObjectsView = new MapObjectsView();
 
     // Search manager by default search events from 
-    // source="sf-muni-data" in real-time with time window = 10 seconds.
+    // source="sf-muni-data" in real-time with time window = 30 seconds.
     this.searchManager = new SearchManager({
       id: 'appSearchManager',
       app: 'routemap',
       preview: true,
       required_field_list: '*',
-      earliest_time: 'rt-10',
+      earliest_time: 'rt-30',
       latest_time: 'rt',
       search: 'source="sf-muni-data" | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
     });
@@ -101,9 +101,9 @@ define(
         var timeWindow = parseTimeWindow(timerange.earliest_time);
         // In case of real-time we use Search time range as a time window 
         // for how long we want to keep data on client. But we always ask 
-        // server only for new events with range -10 seconds.
+        // server only for new events with range -30 seconds.
         this.mapObjectsView.viewModel.timeWindow(timeWindow);
-        this.searchManager.search.set({ latest_time: 'rt', earliest_time: 'rt-10' });
+        this.searchManager.search.set({ latest_time: 'rt', earliest_time: 'rt-30' });
       } else {
         this.mapObjectsView.viewModel.timeWindow(null);
         this.searchManager.search.set(this.searchBarView.timerange.val());
