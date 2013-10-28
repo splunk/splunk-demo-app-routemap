@@ -112,8 +112,12 @@ define(
         throw 'We expect to see all points to be added to desc order by timestamp';
       }
       points.push(point);
-      if (this.showRoute() && this.polyline) {
-        this.polyline.getPath().push(new google.maps.LatLng(point.lat, point.lon));
+      if (this.showRoute()) {
+        if (this.polyline) {
+          this.polyline.getPath().push(new google.maps.LatLng(point.lat, point.lon));
+        } else {
+          this.showRoute(true);
+        }
       }
     },
 
