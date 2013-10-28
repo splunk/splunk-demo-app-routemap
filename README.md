@@ -14,9 +14,10 @@ from Splunk events on Google Map control.
 
 ## Installation
  
-  1. Install the app by copying current directory to `$SPLUNK_HOME/etc/apps/splunk-demo-app-routemap`. 
+  1. Install the app by copying current directory to `$SPLUNK_HOME/etc/apps/routemap`. 
      On *nix based machines instead of copying you can do symbolic link to current folder 
-     from `$SPLUNK_HOME/etc/apps` with command `ln -s [PATH TO CURRENT FOLDER] splunk-demo-app-routemap`.
+     from `$SPLUNK_HOME/etc/apps` with command `ln -s [PATH TO CURRENT FOLDER] routemap`.
+     Make sure that you use `routemap` as an application folder, otherwise you will have routing issues.
   2. (Re)start Splunk so that the app is recognized.
   3. From Splunk home page navigate to `Route Map -> Map` menu item. 
 
