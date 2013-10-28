@@ -16,7 +16,8 @@ define(
     defaults: {
       graduality: 2,
       speed: 10,
-      realtime: true
+      realtime: true,
+      timeWindow: 1800 // 30 minutes
     },
 
     /*

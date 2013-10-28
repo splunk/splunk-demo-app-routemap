@@ -14,13 +14,13 @@ define(
     SearchControlsView,
     SearchManager) {
 
-  'use strict'
+  'use strict';
 
   /*
   * Extract seconds from strings, like 'rtnow-30m'.
   */
   var parseTimeWindow = function(searchProperty) {
-    var matches = (/rt-(\d+)(s|m|h|d|w|mon|q|y)/).exec(searchProperty);
+    var matches = (/rt-(\d+)(m|h|d|w|mon|q|y)?/).exec(searchProperty);
     if (matches.length === 3) {
       var n = parseInt(matches[1]);
       
@@ -52,7 +52,7 @@ define(
           n *= 60;
         case 'm': // minute
           n *= 60;
-        case 's': // second
+        default: // second (undefined)
           break;
       }
 
@@ -64,29 +64,29 @@ define(
 
   var PageController = function() {
 
-    var defaultTimerange = { earliest_time:"rt-30m", latest_time:"rtnow" };
-
     this.mapObjectsView = new MapObjectsView();
 
+    // Search manager by default search events from 
+    // source="sf-muni-data" in real-time with time window = 10 seconds.
     this.searchManager = new SearchManager({
       id: 'appSearchManager',
       app: 'routemap',
       preview: true,
       required_field_list: '*',
-      status_buckets: 300,
-      earliest_time: defaultTimerange.earliest_time,
-      latest_time: defaultTimerange.latest_time,
+      earliest_time: 'rt-10',
+      latest_time: 'rt',
       search: 'source="sf-muni-data" | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`'
     });
 
     this.searchPanel = $('#searchPanel');
 
     // Instantiate the views and search manager
+    // We do not set managerId here, because we use different time windows for
+    // search and for search bar.
     this.searchBarView = new SearchBarView({
-      managerid: this.searchManager.id,
       el: this.searchPanel.append('div'),
-      earliest_time: defaultTimerange.earliest_time,
-      latest_time: defaultTimerange.latest_time,
+      earliest_time: 'rt-30m',
+      latest_time: 'rt',
     }).render();
 
     // Update the search manager when the query in the searchbar changes
@@ -99,11 +99,15 @@ define(
       this.mapObjectsView.viewModel.realtime((/^rt(now)?$/).test(timerange.latest_time));
       if (this.mapObjectsView.viewModel.realtime()) {
         var timeWindow = parseTimeWindow(timerange.earliest_time);
+        // In case of real-time we use Search time range as a time window 
+        // for how long we want to keep data on client. But we always ask 
+        // server only for new events with range -10 seconds.
         this.mapObjectsView.viewModel.timeWindow(timeWindow);
+        this.searchManager.search.set({ latest_time: 'rt', earliest_time: 'rt-10' });
       } else {
         this.mapObjectsView.viewModel.timeWindow(null);
+        this.searchManager.search.set(this.searchBarView.timerange.val());
       }
-      this.searchManager.search.set(this.searchBarView.timerange.val());
     }.bind(this));
 
     this.view = new SearchControlsView({
