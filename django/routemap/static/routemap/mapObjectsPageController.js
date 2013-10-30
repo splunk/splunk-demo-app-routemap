@@ -86,7 +86,7 @@ define(
     // We do not set managerId here, because we use different time windows for
     // search and for search bar.
     this.searchBarView = new SearchBarView({
-      el: this.searchPanel.append('div'),
+      el: $('div:last', this.searchPanel.append('<div/>')),
       earliest_time: 'rt-30m',
       latest_time: 'rt',
     }).render();
@@ -116,7 +116,7 @@ define(
 
     this.view = new SearchControlsView({
       managerid: this.searchManager.id,
-      el: this.searchPanel.append('div')
+      el: $('div:last', this.searchPanel.append('<div/>')),
     }).render();
 
     this.pageProgress = $('#routes-map-progress');
