@@ -234,7 +234,7 @@ define(
     * @param value - if not undefined - set value to showObject.
     */ 
     showObject: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set({'showObject': value});
 
         if (!value) {
@@ -249,7 +249,7 @@ define(
     * @param value - if not undefined - set value to showRoute.
     */ 
     showRoute: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set({'showRoute': value});
 
         if (value) {
@@ -460,7 +460,7 @@ define(
     * Gets a value indicating whether all objects should be be visible.
     */ 
     showAllObjects: function(value, silent) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         var oldValue = this.get('showAllObjects');
 
         this.set('showAllObjects', value);
@@ -479,7 +479,7 @@ define(
     * Gets a value indicating whether all objects routes should be be visible.
     */ 
     showAllRoutes: function(value, silent) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         var oldValue = this.get('showAllRoutes');
 
         this.set('showAllRoutes', value);

@@ -50,7 +50,7 @@ define(
     * positions.
     */ 
     currentTime: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('currentTime', value);
         this.collection.each(function(obj) {
           if (obj.showObject()) {
@@ -67,7 +67,7 @@ define(
     * Gets or sets begin time for view model.
     */ 
     beginTime: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('beginTime', value);
       }
 
@@ -78,7 +78,7 @@ define(
     * Gets or sets end time for view model.
     */ 
     endTime: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('endTime', value);
       }
 
@@ -89,7 +89,7 @@ define(
     * Gets or sets if current view is in real-time mode.
     */
     realtime: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         if (value) {
           this.pause();
         }
@@ -103,7 +103,7 @@ define(
     * Gets or sets time window (use it for real-time mode).
     */
     timeWindow: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('timeWindow', value);
       }
 
@@ -114,7 +114,7 @@ define(
     * Gets or sets playback speed.
     */
     speed: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('speed', value);
       }
 
@@ -125,7 +125,7 @@ define(
     * Gets or sets playback graduality.
     */
     graduality: function(value) {
-      if (!_.isUndefined(value)) {
+      if (arguments.length !== 0) {
         this.set('graduality', value);
       }
 
