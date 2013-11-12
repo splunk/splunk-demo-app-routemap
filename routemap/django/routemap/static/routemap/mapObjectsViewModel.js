@@ -14,7 +14,7 @@ define(
     * Default values for view model.
     */
     defaults: {
-      graduality: 2,
+      refreshRate: 2,
       speed: 10,
       realtime: true,
       timeWindow: 1800 // 30 minutes
@@ -122,14 +122,14 @@ define(
     },
 
     /*
-    * Gets or sets playback graduality.
+    * Gets or sets playback refreshRate.
     */
-    graduality: function(value) {
+    refreshRate: function(value) {
       if (arguments.length !== 0) {
-        this.set('graduality', value);
+        this.set('refreshRate', value);
       }
 
-      return this.get('graduality');
+      return this.get('refreshRate');
     },
 
     /*
@@ -201,11 +201,11 @@ define(
         }
 
         this.set('playInterval', setInterval(function() {
-          this.currentTime(this.currentTime() + (this.speed() / this.graduality()));
+          this.currentTime(this.currentTime() + (this.speed() / this.refreshRate()));
           if (this.currentTime() > this.endTime()) {
             this.pause();
           } 
-        }.bind(this), (1000 / this.graduality())));
+        }.bind(this), (1000 / this.refreshRate())));
       }
     }, 
 

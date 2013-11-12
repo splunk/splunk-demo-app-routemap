@@ -14,7 +14,7 @@ define(
 
     events: {
       'change #input-speed-value': 'userChangeSpeed',
-      'change #input-graduality-value': 'userChangeGraduality',
+      'change #input-refreshRate-value': 'userChangeRefreshRate',
       'change #input-time': 'userChangeTime',
       'click #button-play': 'userPlay',
       'click #button-pause': 'userPause',
@@ -30,8 +30,8 @@ define(
       this.buttonPause = this.$('#button-pause');
       this.spanSpeedValue = this.$('#span-speed-value');
       this.inputSpeedValue = this.$('#input-speed-value');
-      this.spanGradualityValue = this.$('#span-graduality-value');
-      this.inputGradualityValue = this.$('#input-graduality-value');
+      this.spanRefreshRateValue = this.$('#span-refreshRate-value');
+      this.inputRefreshRateValue = this.$('#input-refreshRate-value');
       this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
       this.labelCurrentTime = this.$('span[name=routes-currenttime]');
       this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
@@ -77,15 +77,15 @@ define(
             this.inputSpeedValue.prop('disabled', true);
           }
         }.bind(this))
-        .on('change:graduality', function() {
-          if (this.viewModel.has('graduality')) {
-            var currentGraduality = this.viewModel.graduality();
-            this.spanGradualityValue.text(currentGraduality);
-            this.inputGradualityValue.val(currentGraduality);
-            this.inputGradualityValue.prop('disabled', false);
+        .on('change:refreshRate', function() {
+          if (this.viewModel.has('refreshRate')) {
+            var currentRefreshRate = this.viewModel.refreshRate();
+            this.spanRefreshRateValue.text(currentRefreshRate);
+            this.inputRefreshRateValue.val(currentRefreshRate);
+            this.inputRefreshRateValue.prop('disabled', false);
           } else {
-            this.spanGradualityValue.text('');
-            this.inputGradualityValue.prop('disabled', true);
+            this.spanRefreshRateValue.text('');
+            this.inputRefreshRateValue.prop('disabled', true);
           }
         }.bind(this))
         .on('change:playInterval change:currentTime change:realtime', function() {
@@ -99,17 +99,17 @@ define(
           
           if (realtime) {
             this.inputSpeedValue.parent().hide();
-            this.inputGradualityValue.parent().hide();
+            this.inputRefreshRateValue.parent().hide();
           } else {
             this.inputSpeedValue.parent().show();
-            this.inputGradualityValue.parent().show();
+            this.inputRefreshRateValue.parent().show();
           }
 
           this.buttonPlay.prop('disabled', realtime);
           this.buttonPause.prop('disabled', realtime);
           this.inputTime.prop('disabled', realtime);
         }.bind(this))
-        .trigger('change:currentTime change:beginTime change:endTime change:speed change:graduality change:playInterval change:realtime');
+        .trigger('change:currentTime change:beginTime change:endTime change:speed change:refreshRate change:playInterval change:realtime');
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {
           var lvItem = this.objectsList[model.modelId()] = new MapObjectListViewItem({model: model});
@@ -147,10 +147,10 @@ define(
       if (isPlaying) this.viewModel.play();
     },
 
-    userChangeGraduality: function() {
+    userChangeRefreshRate: function() {
       var isPlaying = this.viewModel.playbackMode();
       if (isPlaying) this.viewModel.pause();
-      this.viewModel.graduality(parseFloat(this.inputGradualityValue.val()));
+      this.viewModel.refreshRate(parseFloat(this.inputRefreshRateValue.val()));
       if (isPlaying) this.viewModel.play();
     },
 
