@@ -1,3 +1,4 @@
 #!/bin/bash  
 
-$SPLUNK_HOME/bin/splunk cmd node $(dirname $0)/app/app.js
+current_dir=$(dirname "$0")
+"$SPLUNK_HOME/bin/splunk" cmd node "$current_dir/app/app.js"
