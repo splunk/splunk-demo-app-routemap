@@ -66,7 +66,9 @@ define(
 
     this.mapObjectsView = new MapObjectsView();
 
-    var defaultSearch = 'source="sf-muni-data" | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`';
+    var search_index = 'source="sf-muni-data"',
+        search_sample = '| inputlookup sfmunisample20140101',
+        search_nomalization = ' | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`';
 
     // Search manager by default search events from 
     // source="sf-muni-data" in real-time with time window = 30 seconds.
@@ -77,7 +79,7 @@ define(
       required_field_list: '*',
       earliest_time: 'rt-30',
       latest_time: 'rt',
-      search: defaultSearch
+      search: search_index + search_nomalization
     });
 
     this.searchPanel = $('#searchPanel');
@@ -91,7 +93,7 @@ define(
       latest_time: 'rt',
     }).render();
 
-    this.searchBarView.val(defaultSearch);
+    this.searchBarView.val(search_index + search_nomalization);
 
     // Update the search manager when the query in the searchbar changes
     this.searchBarView.on('change', function() {
@@ -138,6 +140,15 @@ define(
     .on('search:failed', function() {
       this.pageProgress.hide();
       // TODO: Show error to user
+    }.bind(this));
+
+    $('#link-sample-data').click(function() {
+      this.searchBarView.val(search_sample + search_nomalization);
+      this.searchBarView.timerange.val({
+        earliest_time: '0',
+        latest_time: undefined
+      });
+      return false;
     }.bind(this));
 
     var dataHandler = function(results) {
