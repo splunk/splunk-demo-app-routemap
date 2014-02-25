@@ -3,7 +3,7 @@ define(
   ['underscore', 'backbone', 'mapObjectsDictionary'], 
   function(_, Backbone, MapObjectsDictionary) {
 
-  'use strict'
+  'use strict';
 
   /*
   * View-Model object for map objects view.
@@ -229,7 +229,7 @@ define(
         if (model.showObject() || model.showRoute()) {
           var points = model.getPoints();
           _.each(points, function(point) {
-            bounds.extend(new google.maps.LatLng(point.lat, point.lon))
+            bounds.extend(new google.maps.LatLng(point.lat, point.lon));
           });
         }
       });

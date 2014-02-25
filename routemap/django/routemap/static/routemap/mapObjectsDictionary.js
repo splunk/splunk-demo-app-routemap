@@ -3,11 +3,11 @@ define(
   ['underscore', 'backbone'], 
   function(_, Backbone) {
 
-  'use strict'
+  'use strict';
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
-  var defaultOpacity = .6;
+  var defaultOpacity = 0.6;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
     '#615f22', '#747128', '#87842f', '#9b9735', '#aeaa3b', '#c0bb43', '#c7c355', '#ceca68', '#d4d17b', '#dbd88e', // Yellow
@@ -45,7 +45,7 @@ define(
     } 
 
     return title;
-  };
+  }
 
   /*
   * Gets a value indicating whether this point still in default object timeout limit.
@@ -101,10 +101,10 @@ define(
     *
     */ 
     add: function(point) {
-      if (!point 
-        || !_.isNumber(point.ts)
-        || !_.isNumber(point.lat)
-        || !_.isNumber(point.lon)) {
+      if (!point ||
+        !_.isNumber(point.ts) ||
+        !_.isNumber(point.lat) ||
+        !_.isNumber(point.lon)) {
         throw 'Argument exception. Invalid point format';
       }
       var points = this.getPoints();
@@ -141,8 +141,8 @@ define(
           var deadline = currentTime - timeWindow;
           var firstPoint = _.first(points);
           while (firstPoint && firstPoint.ts < deadline) {
-            if (points.length === 1 
-              && inTimeoutLimit(currentTime, _.first(points))) {
+            if (points.length === 1 &&
+              inTimeoutLimit(currentTime, _.first(points))) {
               break;
             }
             firstPoint = points.shift();
@@ -294,7 +294,7 @@ define(
       // Auto zoom to show route and marker
       var bounds = new google.maps.LatLngBounds();
       _.each(this.getPoints(), function(point) {
-        bounds.extend(new google.maps.LatLng(point.lat, point.lon))
+        bounds.extend(new google.maps.LatLng(point.lat, point.lon));
       });
       this.map.fitBounds(bounds);
 
@@ -316,9 +316,9 @@ define(
               if (this.polyline) {
                 var step = (animation.step - Math.floor(animation.step));
                 if (step === 1 || step === 5) {
-                  step *= .4;
+                  step *= 0.4;
                 } else {
-                  step *= .8;
+                  step *= 0.8;
                 }
                 if (step % 2 !== 0) {
                   step = 1 - step;

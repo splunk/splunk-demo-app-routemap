@@ -46,12 +46,16 @@ define(
         case 'mon': // month
         case 'w': // week
           n *= daysMultiplier;
+          /* falls through */
         case 'd': // day
           n *= 24;
+          /* falls through */
         case 'h': // hour
           n *= 60;
+          /* falls through */
         case 'm': // minute
           n *= 60;
+          /* falls through */
         default: // second (undefined)
           break;
       }
@@ -60,7 +64,7 @@ define(
     }
 
     return null;
-  }
+  };
 
   var PageController = function() {
 
@@ -160,7 +164,7 @@ define(
         if (result.data) {
           var data = result.data.split(';');
           var point = { ts: parseFloat(data[0]), lat: parseFloat(data[1]), lon: parseFloat(data[2]) };
-          delete result['data'];
+          delete result.data;
           dataPoints.push({obj: result, point: point});
         }
       }

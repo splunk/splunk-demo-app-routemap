@@ -3,7 +3,7 @@ define(
   ['underscore', 'backbone', 'mapObjectsViewModel'], 
   function(_, Backbone, MapObjectsViewModel) {
 
-  'use strict'
+  'use strict';
 
   /*
   * Routes map view
@@ -24,7 +24,7 @@ define(
     },
 
     initialize: function() {
-      this.viewModel = new MapObjectsViewModel;
+      this.viewModel = new MapObjectsViewModel();
 
       this.buttonPlay = this.$('#button-play');
       this.buttonPause = this.$('#button-pause');
@@ -262,7 +262,7 @@ define(
     highlightObject: function() {
       this.model.highlightObject();
     }
-  })
+  });
 
   // Require export (create new travel system)
   return RoutesMapView;
