@@ -122,6 +122,7 @@
                 'leaflet.label': '{{STATIC_URL}}{{app_name}}/bower_components/Leaflet.label/dist/leaflet.label'
             },
             shim: {
+                'leaflet': [ 'splunkjs/ready!' ],
                 'leaflet.label': [ 'leaflet' ]
             }
         });
