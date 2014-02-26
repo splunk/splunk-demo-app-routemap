@@ -7,6 +7,7 @@
 {% block css %}
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css" >
     <link rel="stylesheet" href="{{STATIC_URL}}{{app_name}}/custom.css" >
+    <link rel="stylesheet" href="{{STATIC_URL}}{{app_name}}/bower_components/Leaflet.label/dist/leaflet.label.css">
 {% endblock css %}
 
 {% block content %}
@@ -117,7 +118,11 @@
         // Configure require config for bower components
         require.config({
             paths: {
-                'leaflet': '//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet'
+                'leaflet': '//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet',
+                'leaflet.label': '{{STATIC_URL}}{{app_name}}/bower_components/Leaflet.label/dist/leaflet.label'
+            },
+            shim: {
+                'leaflet.label': [ 'leaflet' ]
             }
         });
 

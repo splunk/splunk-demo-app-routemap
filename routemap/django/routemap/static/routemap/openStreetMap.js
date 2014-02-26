@@ -1,6 +1,6 @@
 define(
 'routemap/openStreetMap', 
-['jquery', 'underscore', 'leaflet'], 
+['jquery', 'underscore', 'leaflet', 'leaflet.label'], 
 function($, _, L) {
   'use strict';
 
@@ -55,7 +55,7 @@ function($, _, L) {
         color: data.color,
         label: data.title,
         radius: 4
-      });
+      }).bindLabel(data.title);
     this.marker.addTo(this.map.map);
   };
 
