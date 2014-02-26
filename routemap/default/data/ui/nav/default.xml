@@ -1,4 +1,5 @@
 <nav>
     <view name="default" default="true"/>
-    <a href="/dj/redirector/routemap/map">Map</a>
+    <a href="/dj/redirector/routemap/map#googlemap">On Google Maps</a>
+    <a href="/dj/redirector/routemap/map#openstreetmap">On OpenStreetMap</a>
 </nav>

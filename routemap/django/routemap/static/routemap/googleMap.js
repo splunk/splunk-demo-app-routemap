@@ -1,15 +1,17 @@
 define(
-'routemap/map', 
+'routemap/googleMap', 
 ['jquery', 'underscore'], 
-function($, _) {
+function($, _, L) {
   'use strict';
 
-  /*
-   * Abstraction for maps
+  /* 
+   * ---------------------------
+   * Google Maps
+   * ---------------------------
    */
 
   var GoogleMap = function(div) {
-    this.map = new GMaps({ div: div, lat: 0, lng: 0, zoom: 2 });
+    this.map = new GMaps({ div: '#' + div, lat: 0, lng: 0, zoom: 2 });
   };
 
   GoogleMap.prototype.autozoom = function(collection) {
@@ -64,7 +66,7 @@ function($, _) {
     // Highlight object
     var animation = {step: 0};
     $(animation).animate(
-        { step: 2 },
+        { step: 1 },
         {
           duration: 1000,
           easing: 'linear',
@@ -138,12 +140,6 @@ function($, _) {
     this.map.map.fitBounds(bounds);
   };
 
-  return function(div, type) {
-    if (type === 'google') {
-      return new GoogleMap(div);
-    } else {
-      // return new OpenStreetMap($el);
-    }
-  };
+  return GoogleMap;
 }
 );

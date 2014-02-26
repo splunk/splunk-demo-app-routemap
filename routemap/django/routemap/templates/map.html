@@ -5,6 +5,7 @@
 {% block title %}Route Map demo application{% endblock title %}
 
 {% block css %}
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet.css" >
     <link rel="stylesheet" href="{{STATIC_URL}}{{app_name}}/custom.css" >
 {% endblock css %}
 
@@ -113,6 +114,13 @@
     <!-- https://github.com/hpneo/gmaps -->
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/gmaps.js/0.4.5/gmaps.min.js"></script>
     <script>
+        // Configure require config for bower components
+        require.config({
+            paths: {
+                'leaflet': '//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.2/leaflet'
+            }
+        });
+
         var pageController = null;
         require(['mapObjectsPageController', 'splunkjs/ready!'], function(PageController) {
            pageController = new PageController();
