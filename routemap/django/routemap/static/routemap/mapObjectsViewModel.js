@@ -1,7 +1,7 @@
 define(
   'mapObjectsViewModel', 
-  ['underscore', 'backbone', 'mapObjectsDictionary'], 
-  function(_, Backbone, MapObjectsDictionary) {
+  ['underscore', 'backbone', 'mapObjectsDictionary', 'routemap/map'], 
+  function(_, Backbone, MapObjectsDictionary, mapFactory) {
 
   'use strict';
 
@@ -25,7 +25,7 @@ define(
     */ 
     initialize: function() {
       // Initialize sub-models
-      this.map = new GMaps({ div: '#map', lat: 0, lng: 0, zoom: 2 });
+      this.map = mapFactory('#map', 'google');
       this.collection = new MapObjectsDictionary({ map: this.map });
 
       this.collection
@@ -223,18 +223,7 @@ define(
     * Auto-zoom map to area of selected objects.
     */
     autoZoom: function() {
-      // Calculate bounds of all visible objects
-      var bounds = new google.maps.LatLngBounds();
-      this.collection.each(function(model) {
-        if (model.showObject() || model.showRoute()) {
-          var points = model.getPoints();
-          _.each(points, function(point) {
-            bounds.extend(new google.maps.LatLng(point.lat, point.lon));
-          });
-        }
-      });
-
-      this.map.fitBounds(bounds);
+      this.map.autozoom(this.collection);
     }
   });
 

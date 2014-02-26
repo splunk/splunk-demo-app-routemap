@@ -7,7 +7,6 @@ define(
 
   // How many seconds we show object on map after we think it disappears.
   var defaultObjectTimeout = 300;
-  var defaultOpacity = 0.6;
   var defaultColors = [
     '#236326', '#29762d', '#2f8934', '#359d3b', '#3bb042', '#44c04b', '#57c75d', '#6ace6f', '#7cd582', '#8fdb94', // Green
     '#615f22', '#747128', '#87842f', '#9b9735', '#aeaa3b', '#c0bb43', '#c7c355', '#ceca68', '#d4d17b', '#dbd88e', // Yellow
@@ -114,7 +113,7 @@ define(
       points.push(point);
       if (this.showRoute()) {
         if (this.polyline) {
-          this.polyline.getPath().push(new google.maps.LatLng(point.lat, point.lon));
+          this.polyline.addPoint(point.lat, point.lon);
         } else {
           this.showRoute(true);
         }
@@ -147,7 +146,7 @@ define(
             }
             firstPoint = points.shift();
             if (this.polyline) {
-              this.polyline.getPath().removeAt(0);
+              this.polyline.removePoint(0);
             }
           }
         }
@@ -178,20 +177,13 @@ define(
 
         if (lat && lon) {
           if (this.marker) {
-            this.marker.setPosition(new google.maps.LatLng(lat, lon));
+            this.marker.move(lat, lon);
           } else {
             this.marker = this.map.addMarker({
                 lat: lat,
-                lng: lon,
+                lon: lon,
                 title: this.get('title'),
-                zIndex: 1,
-                icon: {
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 4,
-                  strokeColor: this.get('color'),
-                  strokeWeight: 4,
-                  strokeOpacity: 1
-                }
+                color: this.get('color'),
             });
           }
         } else {
@@ -210,7 +202,7 @@ define(
     */
     clearPos: function() {
       if (this.marker) {
-        this.marker.setMap(null);
+        this.marker.remove();
         this.marker = null;
       }
     },
@@ -260,16 +252,14 @@ define(
 
             path.reverse();
 
-            this.polyline = this.map.drawPolyline({
+            this.polyline = this.map.addPolyline({
               path: path,
-              strokeColor: this.get('color'),
-              strokeOpacity: defaultOpacity,
-              strokeWeight: 4
+              color: this.get('color')
             });
           }
         } else {
           if (this.polyline) {
-            this.polyline.setMap(null);
+            this.polyline.remove();
             this.polyline = null;
           }
         }
@@ -291,53 +281,15 @@ define(
       if (!this.showRoute()) this.showRoute(true);
       if (!this.showObject()) this.showObject(true);
 
-      // Auto zoom to show route and marker
-      var bounds = new google.maps.LatLngBounds();
-      _.each(this.getPoints(), function(point) {
-        bounds.extend(new google.maps.LatLng(point.lat, point.lon));
-      });
-      this.map.fitBounds(bounds);
+      this.polyline.zoomTo();
 
       // Highlight object
-      var animation = {step: 0};
-      $(animation).animate(
-          { step: 2 },
-          {
-            duration: 1000,
-            easing: 'linear',
-            start: function() {
-              if (this.polyline) this.polyline.setOptions({ zIndex: 100 });
-              if (this.marker) {
-                this.marker.setZIndex(100);
-                this.marker.setAnimation(google.maps.Animation.BOUNCE);
-              }
-            }.bind(this),
-            progress: function() {
-              if (this.polyline) {
-                var step = (animation.step - Math.floor(animation.step));
-                if (step === 1 || step === 5) {
-                  step *= 0.4;
-                } else {
-                  step *= 0.8;
-                }
-                if (step % 2 !== 0) {
-                  step = 1 - step;
-                }
-                this.polyline.setOptions({strokeOpacity:step});
-              }
-            }.bind(this),
-            complete: function() {
-              if (this.polyline) {
-                this.polyline.setOptions({ strokeOpacity:defaultOpacity });
-              }
-              if (this.polyline) this.polyline.setOptions({ zIndex: 1 , strokeOpacity:defaultOpacity });
-              if (this.marker) {
-                this.marker.setZIndex(1);
-                this.marker.setAnimation(null);
-              }
-            }.bind(this)
-          })
-      ;
+      if (this.marker) {
+        this.marker.highlight();
+      }
+      if (this.polyline) {
+        this.polyline.highlight();
+      }
     },
 
     /*
