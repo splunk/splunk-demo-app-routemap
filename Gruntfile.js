@@ -35,7 +35,10 @@ module.exports = function(grunt) {
     source: [
       './**/*',
       '!./local/**',
-      '!./*.tar.gz'
+      '!./*.tar.gz',
+      '!./django/routemap/static/routemap/bower_components/**/*',
+      './django/routemap/static/routemap/bower_components/Leaflet.label/dist/leaflet.label.js',
+      './django/routemap/static/routemap/bower_components/Leaflet.label/dist/leaflet.label.css'
     ]
   };
 
