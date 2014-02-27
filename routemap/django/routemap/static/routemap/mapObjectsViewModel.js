@@ -1,7 +1,7 @@
 define(
-  'mapObjectsViewModel', 
-  ['underscore', 'backbone', 'mapObjectsDictionary', 'routemap/mapFactory'], 
-  function(_, Backbone, MapObjectsDictionary, mapFactory) {
+  'routemap/mapObjectsViewModel', 
+  ['underscore', 'backbone', 'routemap/mapObjectsDictionary'], 
+  function(_, Backbone, MapObjectsDictionary) {
 
   'use strict';
 
@@ -25,7 +25,7 @@ define(
     */ 
     initialize: function() {
       // Initialize sub-models
-      this.map = mapFactory('map', (document.location.hash || '#googlemap').substring(1));
+      this.map = this.get('map');
       this.collection = new MapObjectsDictionary({ map: this.map });
 
       this.collection

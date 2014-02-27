@@ -1,44 +1,53 @@
 define(
-  'mapObjectsView', 
-  ['underscore', 'backbone', 'mapObjectsViewModel'], 
-  function(_, Backbone, MapObjectsViewModel) {
+  'routemap/mapObjectsView', 
+  ['underscore', 'backbone', 'routemap/mapObjectsViewModel', 'routemap/mapFactory'], 
+  function(_, Backbone, MapObjectsViewModel, mapFactory) {
 
   'use strict';
 
   /*
   * Routes map view
   */
-  var RoutesMapView = Backbone.View.extend({
-    
-    el: $('#routes-map-view'),
-
+  var MapObjectsView = Backbone.View.extend({
     events: {
-      'change #input-speed-value': 'userChangeSpeed',
-      'change #input-refreshRate-value': 'userChangeRefreshRate',
-      'change #input-time': 'userChangeTime',
-      'click #button-play': 'userPlay',
-      'click #button-pause': 'userPause',
-      'click #button-autozoom': 'userAutoZoom',
-      'click #map-objects-header input[type=checkbox]:first': 'userToggleAllObjects',
-      'click #map-objects-header input[type=checkbox]:last': 'userToggleAllRoutes',
+      'change *[name=input-speed-value]': 'userChangeSpeed',
+      'change *[name=input-refreshRate-value]': 'userChangeRefreshRate',
+      'change *[name=input-time]': 'userChangeTime',
+      'click *[name=button-play]': 'userPlay',
+      'click *[name=button-pause]': 'userPause',
+      'click *[name=button-autozoom]': 'userAutoZoom',
+      'click *[name=map-objects-header] input[type=checkbox]:first': 'userToggleAllObjects',
+      'click *[name=map-objects-header] input[type=checkbox]:last': 'userToggleAllRoutes',
     },
 
-    initialize: function() {
-      this.viewModel = new MapObjectsViewModel();
+    render: function() {
 
-      this.buttonPlay = this.$('#button-play');
-      this.buttonPause = this.$('#button-pause');
-      this.spanSpeedValue = this.$('#span-speed-value');
-      this.inputSpeedValue = this.$('#input-speed-value');
-      this.spanRefreshRateValue = this.$('#span-refreshRate-value');
-      this.inputRefreshRateValue = this.$('#input-refreshRate-value');
-      this.labelBeginTime = this.$('#bar-time-ranges div:first-child > span');
+      if (!this.template) {
+        this.template = _.template($(this.options.view_template_id).html())
+      }
+
+      this.$el.html(this.template(this));
+
+      var mapElementId = _.uniqueId('routemap_map_');
+      this.$('*[name=map]').attr('id', mapElementId);
+
+      this.viewModel = new MapObjectsViewModel({
+        map: mapFactory(mapElementId, (document.location.hash || '#googlemap').substring(1))
+      });
+
+      this.buttonPlay = this.$('*[name=button-play]');
+      this.buttonPause = this.$('*[name=button-pause]');
+      this.spanSpeedValue = this.$('*[name=span-speed-value]');
+      this.inputSpeedValue = this.$('*[name=input-speed-value]');
+      this.spanRefreshRateValue = this.$('*[name=span-refreshRate-value]');
+      this.inputRefreshRateValue = this.$('*[name=input-refreshRate-value]');
+      this.labelBeginTime = this.$('*[name=bar-time-ranges] div:first-child > span');
       this.labelCurrentTime = this.$('span[name=routes-currenttime]');
-      this.labelEndTime = this.$('#bar-time-ranges div:last-child > span');
-      this.inputTime = this.$('#input-time');
-      this.objectsListView = this.$('#map-objects-list');
-      this.checkboxAllObjects = this.$('#map-objects-header input[type=checkbox]:first');
-      this.checkboxAllRoutes = this.$('#map-objects-header input[type=checkbox]:last');
+      this.labelEndTime = this.$('*[name=bar-time-ranges] div:last-child > span');
+      this.inputTime = this.$('*[name=input-time]');
+      this.objectsListView = this.$('*[name=map-objects-list]');
+      this.checkboxAllObjects = this.$('*[name=map-objects-header] input[type=checkbox]:first');
+      this.checkboxAllRoutes = this.$('*[name=map-objects-header] input[type=checkbox]:last');
 
       this.objectsList = {};
 
@@ -112,7 +121,10 @@ define(
         .trigger('change:currentTime change:beginTime change:endTime change:speed change:refreshRate change:playInterval change:realtime');
 
         this.listenTo(this.viewModel.collection, 'add', function(model) {
-          var lvItem = this.objectsList[model.modelId()] = new MapObjectListViewItem({model: model});
+          var lvItem = this.objectsList[model.modelId()] = new MapObjectListViewItem({ 
+            model: model,
+            view_list_item_template_id: this.options.view_list_item_template_id
+          });
           this.objectsListView.append(lvItem.render().el);
         }.bind(this));
 
@@ -137,6 +149,8 @@ define(
           .on('change:showAllRoutes', function(model, showAllRoutes) {
             this.checkboxAllRoutes.prop('checked', showAllRoutes);
           }.bind(this));
+
+      return this;
     },
 
     // Event handlers
@@ -228,8 +242,6 @@ define(
     
     tagName: 'li',
 
-    template: _.template($('#map-object-list-template').html()),
-
     events: {
       'click input[type=checkbox]:first': 'toggleShowObject',
       'click input[type=checkbox]:last': 'toggleShowRoute',
@@ -247,6 +259,10 @@ define(
     },
 
     render: function() {
+      if (!this.template) {
+        this.template = _.template($(this.options.view_list_item_template_id).html())
+      }
+
       this.$el.html(this.template(this.model.toJSON()));
       return this;
     },
@@ -265,6 +281,6 @@ define(
   });
 
   // Require export (create new travel system)
-  return RoutesMapView;
+  return MapObjectsView;
 });
 

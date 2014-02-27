@@ -1,5 +1,5 @@
 define(
-  'mapObjectsDictionary', 
+  'routemap/mapObjectsDictionary', 
   ['underscore', 'backbone'], 
   function(_, Backbone) {
 
