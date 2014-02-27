@@ -14,8 +14,12 @@
 {% block managers %}
     {% searchmanager 
         id="appSearchManager" 
+        search="$searchquery$"|token_safe
+        earliest_time="$earlyval$"|token_safe
+        latest_time="$lateval$"|token_safe
         preview=True 
-        required_field_list="*" %}
+        required_field_list="*"
+        autostart=False %}
 {% endblock managers %}
 
 {% block content %}
@@ -24,8 +28,11 @@
             {% searchbar
                 id="appSearchBar" 
                 managerid="appSearchManager"
-                earliest_time="rt-30m"
-                latest_time="rt"
+                value="$searchquery$"|token_safe
+                timerange_earliest_time="$earlyval$"|token_safe
+                timerange_latest_time="$lateval$"|token_safe
+                earliest_time="$earlyval$"|token_safe
+                latest_time="$lateval$"|token_safe
                 default="source=sf-muni-data | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`" %}
             {% searchcontrols 
                 id="appSearchControls" 
@@ -35,6 +42,8 @@
            {% route_map_view 
                 id="routeMapView_01" 
                 managerid="appSearchManager"
+                earliest_time="$earlyval$"|token_safe
+                latest_time="$lateval$"|token_safe
                 view_template_id="#route-map-template"
                 view_list_item_template_id="#route-map-object-list-template" %}
             <div class="row-fluid">
@@ -140,15 +149,11 @@
         });
 
         require(['splunkjs/ready!'], function(mvc) {
-            var search_index = 'source="sf-muni-data"',
-                search_sample = '| inputlookup sfmunisample20140101',
-                search_nomalization = ' | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`';
-
             var searchManager = mvc.Components.get('appSearchManager');
             var searchBarView = mvc.Components.get('appSearchBar');
 
             $('#link-sample-data').click(function() {
-                searchBarView.val(search_sample + search_nomalization);
+                searchBarView.val('| inputlookup sfmunisample20140101 | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`');
                 searchBarView.timerange.val({
                     earliest_time: '0',
                     latest_time: undefined
@@ -156,20 +161,15 @@
                 return false;
             });
 
-            // Update the search manager when the query in the searchbar changes
-            searchBarView.on('change', function() {
-              searchManager.set('search', searchBarView.val());
-            });
+            setTimeout(function() {
+                searchBarView.timerange.val({
+                    earliest_time: 'rt-30m',
+                    latest_time: 'rt'
+                });
 
-            searchBarView.timerange.on('change', function(timerange) {
-                searchManager.search.set(timerange);
-            });
-
-            searchBarView.val(search_index + search_nomalization);
-            searchBarView.timerange.val({
-                earliest_time: 'rt-30',
-                latest_time: 'rt'
-            });
+                searchManager.set('autostart', true);
+                searchManager.startSearch();
+            }, 500);
         });
     </script>
 {% endblock js %}

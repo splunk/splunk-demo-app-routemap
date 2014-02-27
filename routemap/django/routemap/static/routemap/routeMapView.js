@@ -89,8 +89,8 @@ var RouteMapView = SimpleSplunkView.extend({
             view_list_item_template_id: this.options.view_list_item_template_id
         }).render();
 
-        var earliest_time = this.manager.get('earliest_time');
-        var latest_time = this.manager.get('latest_time');
+        var earliest_time = this.settings.get('earliest_time') || this.manager.get('earliest_time');
+        var latest_time = this.settings.get('latest_time') || this.manager.get('latest_time');
 
         this.mapObjectsView.viewModel.realtime((/^rt(now)?$/).test(latest_time));
         if (this.mapObjectsView.viewModel.realtime()) {
