@@ -1,5 +1,4 @@
 define(
-'routemap/googleMap', 
 ['jquery', 'underscore'], 
 function($, _, L) {
   'use strict';

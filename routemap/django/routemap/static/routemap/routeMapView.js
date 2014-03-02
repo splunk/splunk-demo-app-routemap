@@ -1,12 +1,11 @@
 define(
-'routemap/routeMapView', 
 function(require, exports, module) {
 'use strict';
 
 var _ = require("underscore");
 var mvc = require("splunkjs/mvc");
 var SimpleSplunkView = require("splunkjs/mvc/simplesplunkview");
-var MapObjectsView = require('routemap/mapObjectsView');
+var MapObjectsView = require('./mapObjectsView');
 
 /*
 * Extract seconds from strings, like 'rtnow-30m'.

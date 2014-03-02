@@ -1,6 +1,5 @@
 define(
-'routemap/mapFactory', 
-['routemap/openStreetMap', 'routemap/googleMap'], 
+['./openStreetMap', './googleMap'], 
 function(OpenStreetMap, GoogleMap) {
   'use strict';
 

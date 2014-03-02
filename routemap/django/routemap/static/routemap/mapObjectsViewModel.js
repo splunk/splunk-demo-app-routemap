@@ -1,6 +1,5 @@
 define(
-  'routemap/mapObjectsViewModel', 
-  ['underscore', 'backbone', 'routemap/mapObjectsDictionary'], 
+  ['underscore', 'backbone', './mapObjectsDictionary'], 
   function(_, Backbone, MapObjectsDictionary) {
 
   'use strict';

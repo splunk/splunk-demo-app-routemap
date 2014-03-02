@@ -1,5 +1,4 @@
 define(
-'routemap/openStreetMap', 
 ['jquery', 'underscore', 'leaflet', 'leaflet.label'], 
 function($, _, L) {
   'use strict';
