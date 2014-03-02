@@ -1,6 +1,6 @@
 define(
-  ['underscore', 'backbone'], 
-  function(_, Backbone) {
+  ['underscore', 'backbone', './utils'], 
+  function(_, Backbone, utils) {
 
   'use strict';
 
@@ -20,30 +20,6 @@ define(
   var getRandomColor = function() {
     return defaultColors[Math.floor(Math.random() * defaultColors.length)];
   };
-
-  /*
-  * Generate title string from object's fields. 
-  * @param obj - object.
-  * 
-  * For example if your obj is { a: '1', b: '2' } this 
-  * method will generate P
-  */ 
-  function generateTitle(obj) {
-    var title = '';
-
-    if (obj) {  
-      for (var field in obj) {
-        if (obj.hasOwnProperty(field)) {
-          if (title !== '') {
-            title += ', ';
-          }
-          title += field + ': ' + obj[field];
-        }
-      }
-    } 
-
-    return title;
-  }
 
   /*
   * Gets a value indicating whether this point still in default object timeout limit.
@@ -70,7 +46,8 @@ define(
         showRoute: false,
         color: getRandomColor(),
         realtimeWindow: 300, // Window of storing data
-        modelId: ''
+        modelId: '',
+        raw: {}
       };
     },
 
@@ -83,10 +60,11 @@ define(
       this.on('change:showObject', function() {
         if (!this.showObject()) {
           this.clearPos();
+          this.unset('raw');
         }
       }.bind(this));
 
-      this.set('title', this.get('title') || generateTitle(this.get('obj')) || 'unknown');
+      this.set('title', this.get('title') || utils.generateString(this.get('obj')) || 'unknown');
       this.map = this.get('map');
       this.marker = null;
       this.polyline = null;
@@ -132,7 +110,7 @@ define(
         // Trying to find point 
         var points = this.getPoints();
 
-        var lat, lon;
+        var lat, lon, raw;
 
         if (timeWindow) {
           // At first let's remove all old points.
@@ -155,6 +133,7 @@ define(
           if (lastPoint) {
             lat = lastPoint.lat;
             lon = lastPoint.lon;
+            raw = lastPoint.raw;
           }
         } else {
           var nextPointIndex = -1;
@@ -171,8 +150,11 @@ define(
             var p = (currentTime - currentPoint.ts)/(nextPoint.ts - currentPoint.ts);
             lat = currentPoint.lat + (nextPoint.lat - currentPoint.lat) * p;
             lon = currentPoint.lon + (nextPoint.lon - currentPoint.lon) * p;
+            raw = currentPoint.raw;
           }
         }
+
+        this.set({ raw: raw });
 
         if (lat && lon) {
           if (this.marker) {
@@ -191,6 +173,7 @@ define(
         }
       } else {
         this.clearPos();
+        this.unset('raw');
       }
     },
 

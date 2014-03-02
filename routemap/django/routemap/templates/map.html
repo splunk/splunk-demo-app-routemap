@@ -33,7 +33,7 @@
                 timerange_latest_time="$lateval$"|token_safe
                 earliest_time="$earlyval$"|token_safe
                 latest_time="$lateval$"|token_safe
-                default="source=sf-muni-data | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`" %}
+                default="source=sf-muni-data | fields heading, secsSinceReport, speedKmHr, ts, lat, lon, routeTag, id | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`" %}
             {% searchcontrols 
                 id="appSearchControls" 
                 managerid="appSearchManager" %}
@@ -128,6 +128,9 @@
                 <a style="background-color: <%- color %>;" class="colorBlock">
                 </a>
             </div>
+            <div class="form-inline" >
+                <small name="panel-raw-data">Not visible</small>
+            </div>
         </div>
     </script>
 
@@ -154,7 +157,7 @@
             var searchBarView = mvc.Components.get('appSearchBar');
 
             $('#link-sample-data').click(function() {
-                searchBarView.val('| inputlookup sfmunisample20140101 | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`');
+                searchBarView.val('| inputlookup sfmunisample20140101 | fields heading, secsSinceReport, speedKmHr, ts, lat, lon, routeTag, id | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`');
                 searchBarView.timerange.val({
                     earliest_time: '0',
                     latest_time: undefined

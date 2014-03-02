@@ -1,6 +1,6 @@
 define(
-  ['underscore', 'backbone', './mapObjectsViewModel', './mapFactory'], 
-  function(_, Backbone, MapObjectsViewModel, mapFactory) {
+  ['underscore', 'backbone', './mapObjectsViewModel', './mapFactory', './utils'], 
+  function(_, Backbone, MapObjectsViewModel, mapFactory, utils) {
 
   'use strict';
 
@@ -254,7 +254,11 @@ define(
           }.bind(this))
         .on('change:showObject', function(model, showObject) {
             this.$('input[type=checkbox]:first').prop('checked', showObject);
-          }.bind(this));
+          }.bind(this))
+        .on('change:raw', function(model, raw) {
+            var raw_text = raw ? utils.generateString(raw) : 'Not visible';
+            this.$('*[name=panel-raw-data]').html(raw_text);
+        }.bind(this)).trigger('change:raw');
     },
 
     render: function() {

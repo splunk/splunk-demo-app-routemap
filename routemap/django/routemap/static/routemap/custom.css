@@ -35,7 +35,7 @@
 
     #routes-map-view *[name=map-objects-list] {
         height: 420px;
-        overflow: auto;
+        overflow-y: auto;
     }
 
     #routes-map-view *[name=map-objects-list] .checkbox {
@@ -61,6 +61,10 @@
         display: inline-block;
         margin-right: 5px;
         margin-top: -2px;
+    }
+
+    #routes-map-view *[name=map-objects-list] *[name=panel-raw-data] {
+        white-space: nowrap;
     }
 
 *[name=map] {

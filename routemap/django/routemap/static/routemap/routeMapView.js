@@ -107,17 +107,35 @@ var RouteMapView = SimpleSplunkView.extend({
 
     // Override this method to format the data for the view
     formatData: function(data) {
-         var dataPoints = [];
+        var dataPoints = [];
 
         for (var rIndex = 0; rIndex < data.length; rIndex++) {
             var result = data[rIndex];
 
-            if (result.data) {
-              var val = result.data.split(';');
-              var point = { ts: parseFloat(val[0]), lat: parseFloat(val[1]), lon: parseFloat(val[2]) };
-              delete result.data;
-              dataPoints.push({obj: result, point: point});
-            }
+            var point = { 
+              ts: parseFloat(result.point__ts__), 
+              lat: parseFloat(result.point__lat__), 
+              lon: parseFloat(result.point__lon__),
+            };
+            delete result.point__ts__;
+            delete result.point__lat__;
+            delete result.point__lon__;
+
+            var obj = {};
+
+            _(result).keys().forEach(function(key) {
+              if (key.indexOf('group__') === 0) {
+                obj[key.substring('group__'.length)] = result[key];
+                delete result[key];
+              }
+            });
+
+            point.raw = result;
+
+            dataPoints.push({
+              obj: obj, 
+              point: point
+            });
         }
 
         return dataPoints;
