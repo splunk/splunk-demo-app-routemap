@@ -170,6 +170,7 @@ define(
         } else {
           // Current object does not have points in this time
           this.clearPos();
+          this.unset('raw');
         }
       } else {
         this.clearPos();

@@ -14,7 +14,7 @@ function(require, exports, module) {
 
     if (obj) {  
       for (var field in obj) {
-        if (obj.hasOwnProperty(field)) {
+        if (obj.hasOwnProperty(field) && field.indexOf('_') !== 0) {
           if (title !== '') {
             title += ', ';
           }
