@@ -44,6 +44,7 @@ define(
         points: [], // points ordered by ts asc 
         showObject: true,
         showRoute: false,
+        autoHideRoute: true,
         color: getRandomColor(),
         realtimeWindow: 300, // Window of storing data
         modelId: '',
@@ -61,6 +62,12 @@ define(
         if (!this.showObject()) {
           this.clearPos();
           this.unset('raw');
+        }
+      }.bind(this));
+
+      this.on('change:raw', function(model, raw) {
+        if (this.autoHideRoute()) {
+          this.showRoute(raw ? true : false);
         }
       }.bind(this));
 
@@ -205,6 +212,27 @@ define(
     },
 
     /*
+    * Gets or sets the auto-hide route.
+    * @param value - if not undefined - set value to autoHideRoutes.
+    */
+    autoHideRoute: function(value) {
+      if (arguments.length !== 0) {
+        this.set({'autoHideRoute': value});
+
+        if (!value) {
+          if (this.showRoute() && this.get('row')) {
+            this.showRoute(false);
+          }
+        } else {
+          if (!this.showRoute() && this.get('row')) {
+            this.showRoute(true);
+          }
+        }
+      }
+      return this.get('autoHideRoute');
+    },
+
+    /*
     * Gets or sets the show object value.
     * @param value - if not undefined - set value to showObject.
     */ 
@@ -304,7 +332,8 @@ define(
 
     defaults: {
       showAllObjects: true,
-      showAllRoutes: true
+      showAllRoutes: true,
+      autoHideRoutes: true
     },
 
     /*
@@ -427,6 +456,25 @@ define(
       }
 
       return this.get('showAllRoutes');
+    },
+
+    /*
+    * Gets a value indicating whether object should auto hide their routes is they are invisible.
+    */ 
+    autoHideRoutes: function(value, silent) {
+      if (arguments.length !== 0) {
+        var oldValue = this.get('autoHideRoutes');
+
+        this.set('autoHideRoutes', value);
+
+        if (oldValue !== value && !silent) {
+          this.each(function(model) {
+            model.autoHideRoute(value);
+          });
+        }
+      }
+
+      return this.get('autoHideRoutes');
     },
 
     /*

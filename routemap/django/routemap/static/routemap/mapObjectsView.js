@@ -15,8 +15,9 @@ define(
       'click *[name=button-play]': 'userPlay',
       'click *[name=button-pause]': 'userPause',
       'click *[name=button-autozoom]': 'userAutoZoom',
-      'click *[name=map-objects-header] input[type=checkbox]:first': 'userToggleAllObjects',
-      'click *[name=map-objects-header] input[type=checkbox]:last': 'userToggleAllRoutes',
+      'click *[name=map-objects-header] input[name=checkbox-all-objects]': 'userToggleAllObjects',
+      'click *[name=map-objects-header] input[name=checkbox-all-routes]': 'userToggleAllRoutes',
+      'click *[name=map-objects-header] input[name=checkbox-autohide]': 'userToggleAutoHide'
     },
 
     render: function() {
@@ -45,8 +46,9 @@ define(
       this.labelEndTime = this.$('*[name=bar-time-ranges] div:last-child > span');
       this.inputTime = this.$('*[name=input-time]');
       this.objectsListView = this.$('*[name=map-objects-list]');
-      this.checkboxAllObjects = this.$('*[name=map-objects-header] input[type=checkbox]:first');
-      this.checkboxAllRoutes = this.$('*[name=map-objects-header] input[type=checkbox]:last');
+      this.checkboxAllObjects = this.$('*[name=map-objects-header] input[name=checkbox-all-objects]');
+      this.checkboxAllRoutes = this.$('*[name=map-objects-header] input[name=checkbox-all-routes]');
+      this.autoHideRoutes = this.$('*[name=map-objects-header] input[name=checkbox-autohide]');
 
       this.objectsList = {};
 
@@ -193,6 +195,12 @@ define(
       this.viewModel.pause();
       var value = this.checkboxAllObjects.prop('checked');
       this.viewModel.collection.showAllObjects(value);
+    },
+
+    userToggleAutoHide: function() {
+      this.viewModel.pause();
+      var value = this.autoHideRoutes.prop('checked');
+      this.viewModel.collection.autoHideRoutes(value);
     },
 
     renderPoints: function(dataPoints) {

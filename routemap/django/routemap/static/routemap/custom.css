@@ -26,7 +26,7 @@
     }
 
     #routes-map-view *[name=map-objects-header] {
-        height: 70px;
+        height: 100px;
     }
 
     #routes-map-view *[name=map-objects-header] .checkbox input[type=checkbox] {
@@ -34,7 +34,7 @@
     }
 
     #routes-map-view *[name=map-objects-list] {
-        height: 420px;
+        height: 390px;
         overflow-y: auto;
     }
 
