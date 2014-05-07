@@ -20,6 +20,11 @@ define(
       'click *[name=map-objects-header] input[name=checkbox-autohide]': 'userToggleAutoHide'
     },
 
+    initialize: function(options) {
+      this.options = _.extend(this.options || {}, options);
+      Backbone.View.prototype.initialize.apply(this, arguments);
+    },
+
     render: function() {
 
       if (!this.template) {
@@ -255,7 +260,9 @@ define(
       'click a.colorBlock': 'highlightObject'
     },
 
-    initialize: function() {
+    initialize: function(options) {
+      this.options = _.extend(this.options || {}, options);
+
       this.model
         .on('change:showRoute', function(model, showRoute) {
             this.$('input[type=checkbox]:last').prop('checked', showRoute);
@@ -267,6 +274,8 @@ define(
             var raw_text = raw ? utils.generateString(raw) : 'Not visible';
             this.$('*[name=panel-raw-data]').html(raw_text);
         }.bind(this)).trigger('change:raw');
+
+      Backbone.View.prototype.initialize.apply(this, arguments);
     },
 
     render: function() {
