@@ -5,10 +5,9 @@
   "dependencies": {
   },
   "devDependencies": {
-    "grunt": "~0.4.2",
-    "grunt-contrib-jshint": "~0.8.0",
-    "grunt-contrib-watch": "~0.5.3",
-    "grunt-splunk": "git+ssh://git@github.com:splunk/grunt-splunk.git",
-    "generator-splunkapp": "git+ssh://git@github.com:splunk/generator-splunkapp.git"
+    "grunt": "^0.4.4",
+    "grunt-contrib-jshint": "^0.8.0",
+    "grunt-contrib-watch": "^0.5.3",
+    "splunkdev-grunt": "~0.1.8"
   }
 }

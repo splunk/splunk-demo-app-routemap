@@ -1,8 +1,8 @@
 /*jshint globalstrict: true*/ 'use strict';
 
-var configuration = require('grunt-splunk/lib/configuration'),
-    splunkEnvironment = require('grunt-splunk/lib/environment'),
-    splunkWatchConfig = require('grunt-splunk/lib/watchConfig'),
+var configuration = require('splunkdev-grunt/lib/configuration'),
+    splunkEnvironment = require('splunkdev-grunt/lib/environment'),
+    splunkWatchConfig = require('splunkdev-grunt/lib/watchConfig'),
     path = require('path');
 
 var pkg = require('./package.json');
@@ -82,7 +82,7 @@ module.exports = function(grunt) {
   });
 
   // Load grunt-splunk
-  grunt.loadNpmTasks('grunt-splunk');
+  grunt.loadNpmTasks('splunkdev-grunt');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
 
