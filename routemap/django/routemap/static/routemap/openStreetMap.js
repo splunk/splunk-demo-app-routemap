@@ -11,10 +11,8 @@ function($, _, L) {
 
   var OpenStreetMap = function(div) {
     this.map = L.map(div).setView([0, 0], 2);
-    this.tiles = L.tileLayer('http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png', {
-        attribution: '&copy; 2013 OpenStreetMap &copy; 2013 CloudMade',
-        key: '7939c7b3ce2941b8937d5df4a92830c5',
-        styleId: 82102
+    this.tiles = L.tileLayer('http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
     }).addTo(this.map);
   };
 
