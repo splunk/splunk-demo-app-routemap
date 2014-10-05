@@ -33,7 +33,7 @@
                 timerange_latest_time="$lateval$"|token_safe
                 earliest_time="$earlyval$"|token_safe
                 latest_time="$lateval$"|token_safe
-                default="source=sf-muni-data | fields heading, secsSinceReport, speedKmHr, ts, lat, lon, routeTag, id | `normalize(ts=ts, lat=lat, lon=lon, field1=routeTag, field2=id)`" %}
+                default="source=sf-muni-data index=routemap | fields heading, secsSinceReport, speedKmHr, timestamp, lat, lon, routeTag, id | `normalize(ts=timestamp, lat=lat, lon=lon, field1=routeTag, field2=id)`" %}
             {% searchcontrols 
                 id="appSearchControls" 
                 managerid="appSearchManager" %}
