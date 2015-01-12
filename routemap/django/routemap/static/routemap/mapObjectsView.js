@@ -37,7 +37,7 @@ define(
       this.$('*[name=map]').attr('id', mapElementId);
 
       this.viewModel = new MapObjectsViewModel({
-        map: mapFactory(mapElementId, (document.location.hash || '#googlemap').substring(1))
+        map: mapFactory(mapElementId, this.options.map_type || 'googlemap')
       });
 
       this.buttonPlay = this.$('*[name=button-play]');

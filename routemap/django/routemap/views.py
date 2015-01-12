@@ -7,3 +7,9 @@ def map(request):
     return {
         "app_name": "routemap"
     }
+
+@render_to('routemap:openstreetmap.html')
+def openstreetmap(request): 
+    return {
+        "app_name": "routemap"
+    }
