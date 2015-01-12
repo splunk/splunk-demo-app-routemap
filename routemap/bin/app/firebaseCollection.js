@@ -3,13 +3,15 @@ var firebase = require('firebase');
 /*
 * Firebase collection observer.
 */
-var CollectionObserver = function(path) {
+var CollectionObserver = function(path, child) {
 
   // Fields
 
-  this.collection = new firebase(path);
+  this.firebase = new firebase(path);
+  this.collection = this.firebase.child(child);
   this.listeners = {};
   this.handler = null;
+  this.child = child;
 
   // Private methods
 
@@ -39,7 +41,7 @@ var CollectionObserver = function(path) {
   * New element added to collection.
   */
   var childAdded = function(snapshot) {
-    var elementName = snapshot.name();
+    var elementName = snapshot.key();
     this.listeners[elementName] = elementName;
     this.collection.child(elementName).on('value', valueChangeHandler);
   }.bind(this);
@@ -48,7 +50,7 @@ var CollectionObserver = function(path) {
   * Element removed from collection.
   */
   var childRemoved = function(snapshot) {
-    turnOffValueListener(snapshot.name());
+    turnOffValueListener(snapshot.key());
   }.bind(this);
 
   // Public methods
@@ -76,8 +78,8 @@ var CollectionObserver = function(path) {
 
 // Exports
 
-exports.createObserver = function(path) {
-  return new CollectionObserver(path);
+exports.createObserver = function(path, child) {
+  return new CollectionObserver(path, child);
 };
 
 

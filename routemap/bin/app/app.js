@@ -7,5 +7,5 @@ var enventHandler = function(e) {
 };
 
 firebaseCollection
-  .createObserver('https://publicdata-transit.firebaseio.com/sf-muni/vehicles')
+  .createObserver('https://publicdata-transit.firebaseio.com', 'sf-muni/vehicles')
   .listen(enventHandler);
